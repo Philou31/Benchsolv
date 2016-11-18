@@ -1,0 +1,176 @@
+//! \file main.cpp
+//! \brief Mumps resolution of Ax=b
+//! \author filou
+//! \version 0.1
+//! \date 22/10/2016, 18:42
+//!
+//! Resolution of Ax=b using MUMPS. Details of the parameters:
+//!     - blablabla
+//!
+#include <stdio.h>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <string.h>
+#include "cmdline.h"
+#include "Mumps.h"
+#include "QR_Mumps.h"
+#include "Benchmark.h"
+#include "constants.h"
+
+bool test() {
+    std::cout << "caca\n";
+    return true;
+}
+
+int main(int argc, char **argv) {
+    cmdline::parser a;
+    // add specified type of variable.
+    // 1st argument is long name
+    // 2nd argument is short name (no short name if '\0' specified)
+    // 3rd argument is description
+    // 4th argument is mandatory (optional. default is false)
+    // 5th argument is default value  (optional. it used when mandatory is false)
+    // 6th argument is extra constraint.
+    // Here, port number must be 1 to 65535 by cmdline::range().
+    //    a.add<int>("port", 'p', "port number", false, 80, cmdline::range(1, 65535));
+    //  Boolean flags also can be defined. Call add method without a type parameter.
+    //  a.add("gzip", '\0', "gzip when transfer");
+
+    // cmdline::oneof() can restrict options.
+    
+    ////////////////////////////////////////////////////
+    // DEBUGGING ARGUMENTS
+    ////////////////////////////////////////////////////
+    a.add<std::string>("solver", 's', "Type of solver  for the test", false,
+            "mumps", cmdline::oneof<std::string>("mumps", "qr_mumps", "m", 
+            "qrm"));
+    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
+            cst::A_WATER_MPHASE_SMALL_FILE);
+    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
+            false, "true", cmdline::oneof<std::string>("true", "false"));
+    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
+            false, cst::RHS_WATER_MPHASE_SMALL_FILE);
+    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
+            false, "true", cmdline::oneof<std::string>("true", "false"));
+    a.add<int>("symmetry", 'y', "Symmetry of the matrix A",
+            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
+            parm::SYM_GENERAL, parm::SYM_DEFPOS));
+    a.add<int>("working_host", 'w', "The host is working or not",
+            false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
+            parm::NOT_WORKING_HOST));
+    a.add<std::string>("multiple_bench", 'q', "Run multiple benchmarks or just options from analysis file",
+            false, "false", cmdline::oneof<std::string>("true", "false"));
+    a.add<std::string>("bench_opt", '!', "File containing the options to test in single benchmark",
+            false, "options/benchmark.opt");
+    a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
+            false, "options/mumps/analysis.opt");
+    a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
+            false, cst::EMPTY_FILE);
+    a.add<std::string>("output", 't', "File containing the options to test for output",
+            false, "options/mumps/output.opt");
+    a.add<std::string>("solve", 'p', "File containing the options to test in solve",
+            false, "options/mumps/solve.opt");
+    a.add<std::string>("mumps_output", 'm', "File where all mumps outputs will go",
+            false, "res/mumps.txt");
+    a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
+            false, "res/out.txt");
+    a.add<std::string>("error_file", 'e', "File where all error outputs will go",
+            false, "res/err.txt");
+    a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
+            false, "res/sol_spec.txt");
+    a.add<std::string>("pb_spec_metrics", 'k', "File where all the problem specific metrics will go",
+            false, "res/pb_spec.txt");
+    
+    
+    ////////////////////////////////////////////////////
+    // PRODUCTION ARGUMENTS
+    ////////////////////////////////////////////////////
+//    a.add<std::string>("solver", 's', "Type of solver  for the test", true,
+//            "mumps", cmdline::oneof<std::string>("mumps", "qr_mumps", "m", 
+//            "qrm"));
+//    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", true,
+//            cst::A_MHD_10_FILE);
+//    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
+//            true, "true", cmdline::oneof<std::string>("true", "false"));
+//    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
+//            true, cst::RHS_MHD_10_FILE);
+//    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
+//            true, "true", cmdline::oneof<std::string>("true", "false"));
+//    a.add<int>("symmetry", 'y', "Symmetry of the matrix A",
+//            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
+//            parm::SYM_GENERAL, parm::SYM_DEFPOS));
+//    a.add<int>("working_host", 'w', "The host is working or not",
+//            false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
+//            parm::NOT_WORKING_HOST));
+//    a.add<std::string>("multiple_bench", 'q', "Run multiple benchmarks or just options from analysis file",
+//            false, "false", cmdline::oneof<std::string>("true", "false"));
+//    a.add<std::string>("bench_opt", '!', "File containing the options to test in single benchmark",
+//            false, "options/benchmark.opt");
+//    a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
+//            false, "options/mumps/analysis.opt");
+//    a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
+//            false, cst::EMPTY_FILE);
+//    a.add<std::string>("output", 't', "File containing the options to test for output",
+//            false, cst::EMPTY_FILE);
+//    a.add<std::string>("solve", 'p', "File containing the options to test in solve",
+//            false, cst::EMPTY_FILE);
+//    a.add<std::string>("mumps_output", 'm', "File where all mumps outputs will go",
+//            false, "mumps.txt");
+//    a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
+//            false, "res/out.txt");
+//    a.add<std::string>("error_file", 'e', "File where all error outputs will go",
+//            false, "res/err.txt");
+//    a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
+//            false, "res/sol_spec.txt");
+//    a.add<std::string>("pb_spec_metrics", 'k', "File where all the problem specific metrics will go",
+//            false, "res/pb_spec.txt");
+
+    // Run parser.
+    // It returns only if command line arguments are valid.
+    // If arguments are invalid, a parser output error msgs then exit program.
+    // If help flag ('--help' or '-?') is specified, a parser output usage 
+    // message then exit program.
+    a.parse_check(argc, argv);
+
+    // boolean flags are referred by calling exist() method.
+    std::string solver = a.get<std::string>("solver");
+    std::string A_file = a.get<std::string>("Amatrix");
+    bool An = a.get<std::string>("A_n_present") == "true";
+    std::string b_file = a.get<std::string>("RHS");
+    bool bn = a.get<std::string>("b_n_present") == "true";
+    int sym = a.get<int>("symmetry");
+    int par = a.get<int>("working_host");
+    bool multiple_bench = a.get<std::string>("multiple_bench") == "true";
+    std::string bench_file = a.get<std::string>("bench_opt");
+    std::string out_file = a.get<std::string>("output");
+    std::string anal_file = a.get<std::string>("analysis");
+    std::string facto_file = a.get<std::string>("facto");
+    std::string sol_file = a.get<std::string>("solve");
+    std::string mumps_output = a.get<std::string>("mumps_output");
+    std::string output_file = a.get<std::string>("output_file");
+    std::string error_file = a.get<std::string>("error_file");
+    std::string sol_spec_file = a.get<std::string>("sol_spec_metrics");
+    std::string pb_spec_file = a.get<std::string>("pb_spec_metrics");
+    
+//    FILE *f = freopen(mumps_output.c_str(), "w", stdout);
+//    std::cout << "Redirecting fortran output to : " << mumps_output << 
+//            " at adress: " << f << "\n";
+//    std::ofstream coutstr(output_file);
+//    std::cout.rdbuf(coutstr.rdbuf());
+//    std::ofstream cerrstr(error_file);
+//    std::cerr.rdbuf(cerrstr.rdbuf());
+    
+    if (solver == "mumps" || solver == "m") {
+        Mumps s(A_file, An, b_file, bn, par, sym,
+                cst::USE_COMM_WORLD, MPI_COMM_WORLD, pb_spec_file);
+        Benchmark<Mumps, int, int> b(&s, bench_file, out_file, anal_file, facto_file, 
+                sol_file, sol_spec_file);
+        b.benchmark(multiple_bench);
+    } else if (solver == "qr_mumps" || solver == "qrm") {
+        QR_Mumps s(A_file, An, b_file, bn);
+        Benchmark<QR_Mumps, std::string, int> b(&s, bench_file, out_file, anal_file, 
+                facto_file, sol_file, sol_spec_file);
+        b.benchmark(multiple_bench);
+    }
+}
