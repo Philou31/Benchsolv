@@ -6,9 +6,12 @@
 //!
 
 #include "QR_Mumps.h"
+#include "constants.h"
 
 QR_Mumps::QR_Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-    bool n_present_b): Solver(file_A, n_present_A, file_b, n_present_b)
+    bool n_present_b, std::string string_opt_key, int int_opt_value): 
+    Solver(file_A, n_present_A, file_b, n_present_b), 
+    _opt_key(string_opt_key), _opt_value(int_opt_value)
 {
     std::cout << "INITIALIZE QR_MUMPS !";
     init();
@@ -26,12 +29,16 @@ bool QR_Mumps::is_host() {
     return true;
 }
 
-void QR_Mumps::set_opt(std::string key, int value, std::string sol_spec_file) {
+void QR_Mumps::set_opt(std::string key, int value) {
     std::cout << "Setting " << key << " to value " << value << "\n";
     if (!key.compare(parqrm::EUNIT) || !key.compare(parqrm::OUNIT) ||
         !key.compare(parqrm::DUNIT)) {
         qrm_gseti_c(key.c_str(), value);
     } else dqrm_pseti_c(&_qrm_mat, key.c_str(), value);
+}
+
+void QR_Mumps::set_opt(std::string key, int value, std::string sol_spec_file) {
+    set_opt(key, value);
 
     std::ofstream myfile;
     myfile.open(sol_spec_file.c_str(), std::ofstream::app);
@@ -93,10 +100,18 @@ void QR_Mumps::display_r() {
 void QR_Mumps::init() {
     qrm_init_c(0);
     dqrm_spmat_init_c(&_qrm_mat);
-    qrm_gseti_c(parqrm::DUNIT.c_str(), -1);
-    dqrm_pseti_c(&_qrm_mat, parqrm::ORDERING.c_str(), qrm_scotch_);
-    dqrm_pseti_c(&_qrm_mat, parqrm::KEEPH.c_str(), qrm_yes_);
-//    dqrm_pseti_c(&_qrm_mat, parqrm::MEM_RELAX.c_str(), 1.8);
+    
+    //Default parameters
+    //Global
+    set_opt(parqrm::DUNIT.c_str(), 1);
+    set_opt(parqrm::EUNIT.c_str(), 2);
+    set_opt(parqrm::OUNIT.c_str(), 3);
+    //Local
+    set_opt(parqrm::ORDERING.c_str(), qrm_scotch_);
+    set_opt(parqrm::KEEPH.c_str(), qrm_yes_);
+    
+    //Test Parameters
+    if (_opt_key.compare(cst::EMPTY_STRING_OPT_KEY)) set_opt(_opt_key, _opt_value);
 }
 
 void QR_Mumps::analyse() {
@@ -150,9 +165,9 @@ bool QR_Mumps::get_b_before_facto() {
 }
 
 void QR_Mumps::set_no_output() {
-    qrm_gseti_c(parqrm::DUNIT.c_str(), -1);
-    qrm_gseti_c(parqrm::OUNIT.c_str(), -1);
-    qrm_gseti_c(parqrm::EUNIT.c_str(), -1);
+    set_opt(parqrm::DUNIT.c_str(), -1);
+    set_opt(parqrm::OUNIT.c_str(), -1);
+    set_opt(parqrm::EUNIT.c_str(), -1);
 }
 
 void QR_Mumps::finalize_solve() {

@@ -13,9 +13,10 @@
 
 Mumps::Mumps(std::string file_A, bool n_present_A, std::string file_b, 
     bool n_present_b, int par, int sym, int comm, MPI_Comm mpi_comm,
-    std::string pb_spec_file) :
+    std::string pb_spec_file, int int_opt_key, int int_opt_value) :
     Solver(file_A, n_present_A, file_b, n_present_b), _mpi_comm(mpi_comm),
-    _pb_spec_file(pb_spec_file)
+    _pb_spec_file(pb_spec_file), _opt_key(int_opt_key), 
+    _opt_value(int_opt_value)
 {
     _id.par = par;
     _id.sym = sym;
@@ -35,9 +36,13 @@ bool Mumps::is_host() {
     return _proc_id == parm::HOST_ID;
 }
 
-void Mumps::set_opt(int key, int value, std::string sol_spec_file) {
+void Mumps::set_opt(int key, int value) {
     std::cout << "Setting " << key << " to value " << value << "\n";
     _id.ICNTL(key) = value;
+}
+
+void Mumps::set_opt(int key, int value, std::string sol_spec_file) {
+    set_opt(key, value);
 
     if (is_host()) {
         std::ofstream myfile;
@@ -105,7 +110,20 @@ void Mumps::init() {
     ierr = MPI_Comm_rank(_mpi_comm, &_proc_id);
     std::cerr << "MPI initialization in Mumps, error code: " << ierr << "\n";
     mumps(parm::JOB_INIT);
-    _id.ICNTL(parm::ERR_ANALYSIS) = parm::ERRANAL_FULL;
+    
+    //Default Parameters
+    set_opt(parm::A_FORMAT, parm::A_ASSEMBLED_FORMAT);
+    set_opt(parm::A_DISTRIBUTION, parm::A_DISTR_ANALYSIS);
+//    set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_PAR);
+//    set_opt(parm::SYMPERM_PAR, parm::SYMPERM_PTSCOTCH);
+    set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_SEQ);
+    set_opt(parm::SYMPERM_SEQ, parm::SYMPERM_SCOTCH);
+    set_opt(parm::ITER_REFINEMENT, parm::ITERREF_NUM);
+    set_opt(parm::ERR_ANALYSIS, parm::ERRANAL_FULL);
+    set_opt(parm::NULL_PIVOT, parm::NULL_PIVOT_YES);
+    
+    //Test Parameters
+    if (_opt_key != cst::EMPTY_INT_OPT_KEY) set_opt(_opt_key, _opt_value);
 }
 
 void Mumps::analyse() {

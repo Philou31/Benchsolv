@@ -33,7 +33,6 @@ private:
     K _current_key;
     V _current_value;
     int _nb_tests = 0;
-    // Sol specific info
     long long _ta = 0, _tf = 0, _ts = 0;
 public:
     Benchmark() {}
@@ -53,7 +52,7 @@ public:
     void solve();
     void output_metrics();
     void call(bool a=true, bool f=true, bool s=true, bool o=true);
-    void benchmark(bool multiple_bench);
+    void benchmark(std::string multiple_bench);
     void single_benchmark();
     void multiple_benchmark();
 };

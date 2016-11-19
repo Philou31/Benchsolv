@@ -38,12 +38,15 @@ private:
     Metrics _metrics;
     // Problem specific info
     std::string _pb_spec_file;
+    int _opt_key;
+    int _opt_value;
 public:
     Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-        bool n_present_b, int par, int sym, int comm, MPI_Comm mpi_comm,
-        std::string pb_spec_file);
+    bool n_present_b, int par, int sym, int comm, MPI_Comm mpi_comm,
+    std::string pb_spec_file, int int_opt_key, int int_opt_value);
     ~Mumps();
     virtual bool is_host() override;
+    void set_opt(int key, int value);
     void set_opt(int key, int value, std::string sol_spec_file);
     void get_simple();
     virtual void get_A() override;

@@ -19,6 +19,26 @@ namespace cst
     const int USE_COMM_WORLD = -987654;
     const int HOST_ID = 0;
     
+    //Arguments
+    const std::string EMPTY_STRING_OPT_KEY = "";
+    const int EMPTY_INT_OPT_KEY = -1;
+    //Solver
+    const std::string SOLVER = "solver";
+    const char SOLVER_C = 's';
+    const std::string MUMPS = "mumps";
+    const std::string MUMPS_C = "m";
+    const std::string QR_MUMPS = "qr_mumps";
+    const std::string QR_MUMPS_C = "qrm";
+    //Bool option
+    const std::string TRUE = "true";
+    const std::string FALSE = "false";
+    //Multiple bench
+    const std::string MULTIPLE_BENCH = "multiple_bench";
+    const char MULTIPLE_BENCH_C = 'q';
+    const std::string OPTION = "option";
+    const std::string SINGLE = "single";
+    const std::string MULTIPLE = "multiple";
+    
     //FILES
     const std::string EMPTY_FILE = "";
     const char OPTS_DELIMITER = ' ';

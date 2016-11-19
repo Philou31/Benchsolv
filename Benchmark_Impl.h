@@ -176,10 +176,6 @@ void Benchmark<S,K,V>::output_metrics() {
     _solver->output_metrics(_sol_spec_file);
 }
     
-//template <class S, typename K, typename V>
-//void Benchmark<S,K,V>::finalize() {
-//}
-    
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
 //    std::cout << "A:\n";
@@ -210,12 +206,13 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
 }
     
 template <class S, typename K, typename V>
-void Benchmark<S,K,V>::benchmark(bool multiple_bench) {
-    if (_b_file == _o_file && _o_file == _a_file && _a_file == _f_file && 
-            _f_file == _s_file && _s_file == cst::EMPTY_FILE)
+void Benchmark<S,K,V>::benchmark(std::string multiple_bench) {
+    if (!multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
+        _o_file == _a_file && _a_file == _f_file && _f_file == _s_file && 
+        _s_file == cst::EMPTY_FILE))
         call();
-    if (multiple_bench) multiple_benchmark();
-    else single_benchmark();
+    else if (!multiple_bench.compare(cst::SINGLE)) single_benchmark();
+    else multiple_benchmark();
 }
     
 template <class S, typename K, typename V>
@@ -224,7 +221,6 @@ void Benchmark<S,K,V>::single_benchmark() {
     bool b = iterate_solver(_b_file);
     if(b) std::cout << "\nSingle benchmark executed.\n";
     else {
-        std::cout << "ELSE EXECUTION";
         call();
     }
 }

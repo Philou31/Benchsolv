@@ -19,6 +19,7 @@
 #include <vector>
 #include <sstream>
 #include "Solver.h"
+#include "constants.h"
 //#include "Metrics.h"
 
 class Solver {

@@ -97,6 +97,7 @@ namespace parm {
 
     //Iterative refinement
     const int ITER_REFINEMENT = 10;
+    const int ITERREF_NUM = 10;
     const int ITERREF_NO = 0;
     const int ITERREF_MAX_NUM = -3;
     const int ITERREF_CRITER_MAX_NUM = 10;

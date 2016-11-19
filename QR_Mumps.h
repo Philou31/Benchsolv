@@ -29,11 +29,14 @@ private:
     char _transp{'n'};
     double *_x, *_r, *_b;
     int _nrhs{1};
+    std::string _opt_key;
+    int _opt_value;
 public:
     QR_Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-        bool n_present_b);
+    bool n_present_b, std::string string_opt_key, int int_opt_value);
     ~QR_Mumps();
     virtual bool is_host() override;
+    void set_opt(std::string key, int value);
     void set_opt(std::string key, int value, std::string sol_spec_file);
     void get_simple();
     virtual void get_A() override;

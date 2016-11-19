@@ -42,27 +42,28 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////
     // DEBUGGING ARGUMENTS
     ////////////////////////////////////////////////////
-    a.add<std::string>("solver", 's', "Type of solver  for the test", false,
-            "mumps", cmdline::oneof<std::string>("mumps", "qr_mumps", "m", 
-            "qrm"));
+    a.add<std::string>(cst::SOLVER, cst::SOLVER_C, "Type of solver  for the test", false,
+            cst::MUMPS, cmdline::oneof<std::string>(cst::MUMPS, cst::QR_MUMPS, cst::MUMPS_C, 
+            cst::QR_MUMPS_C));
     a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
             cst::A_WATER_MPHASE_SMALL_FILE);
     a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
-            false, "true", cmdline::oneof<std::string>("true", "false"));
+            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
             false, cst::RHS_WATER_MPHASE_SMALL_FILE);
     a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
-            false, "true", cmdline::oneof<std::string>("true", "false"));
+            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     a.add<int>("symmetry", 'y', "Symmetry of the matrix A",
             false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
             parm::SYM_GENERAL, parm::SYM_DEFPOS));
     a.add<int>("working_host", 'w', "The host is working or not",
             false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
             parm::NOT_WORKING_HOST));
-    a.add<std::string>("multiple_bench", 'q', "Run multiple benchmarks or just options from analysis file",
-            false, "false", cmdline::oneof<std::string>("true", "false"));
+    a.add<std::string>(cst::MULTIPLE_BENCH, cst::MULTIPLE_BENCH_C, "Run multiple benchmarks or just options from analysis file",
+            false, cst::OPTION, 
+            cmdline::oneof<std::string>(cst::MULTIPLE, cst::SINGLE, cst::OPTION));
     a.add<std::string>("bench_opt", '!', "File containing the options to test in single benchmark",
-            false, "options/benchmark.opt");
+            false, "options/run.params");
     a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
             false, "options/mumps/analysis.opt");
     a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
@@ -81,6 +82,12 @@ int main(int argc, char **argv) {
             false, "res/sol_spec.txt");
     a.add<std::string>("pb_spec_metrics", 'k', "File where all the problem specific metrics will go",
             false, "res/pb_spec.txt");
+    a.add<std::string>("string_opt_key", '(', "String key of the option to change (qr_mumps)",
+            false, "");
+    a.add<int>("int_opt_key", ')', "Integer key of the option to change (mumps)",
+            false, -1);
+    a.add<int>("int_opt_value", '-', "Integer value of the option to change (mumps/qr_mumps)",
+            false, -1);
     
     
     ////////////////////////////////////////////////////
@@ -136,12 +143,12 @@ int main(int argc, char **argv) {
     // boolean flags are referred by calling exist() method.
     std::string solver = a.get<std::string>("solver");
     std::string A_file = a.get<std::string>("Amatrix");
-    bool An = a.get<std::string>("A_n_present") == "true";
+    bool An = a.get<std::string>("A_n_present") == cst::TRUE;
     std::string b_file = a.get<std::string>("RHS");
-    bool bn = a.get<std::string>("b_n_present") == "true";
+    bool bn = a.get<std::string>("b_n_present") == cst::TRUE;
     int sym = a.get<int>("symmetry");
     int par = a.get<int>("working_host");
-    bool multiple_bench = a.get<std::string>("multiple_bench") == "true";
+    std::string multiple_bench = a.get<std::string>("multiple_bench");
     std::string bench_file = a.get<std::string>("bench_opt");
     std::string out_file = a.get<std::string>("output");
     std::string anal_file = a.get<std::string>("analysis");
@@ -152,6 +159,9 @@ int main(int argc, char **argv) {
     std::string error_file = a.get<std::string>("error_file");
     std::string sol_spec_file = a.get<std::string>("sol_spec_metrics");
     std::string pb_spec_file = a.get<std::string>("pb_spec_metrics");
+    std::string string_opt_key = a.get<std::string>("string_opt_key");
+    int int_opt_key = a.get<int>("int_opt_key");
+    int int_opt_value = a.get<int>("int_opt_value");
     
 //    FILE *f = freopen(mumps_output.c_str(), "w", stdout);
 //    std::cout << "Redirecting fortran output to : " << mumps_output << 
@@ -163,14 +173,15 @@ int main(int argc, char **argv) {
     
     if (solver == "mumps" || solver == "m") {
         Mumps s(A_file, An, b_file, bn, par, sym,
-                cst::USE_COMM_WORLD, MPI_COMM_WORLD, pb_spec_file);
-        Benchmark<Mumps, int, int> b(&s, bench_file, out_file, anal_file, facto_file, 
-                sol_file, sol_spec_file);
+            cst::USE_COMM_WORLD, MPI_COMM_WORLD, pb_spec_file, int_opt_key, 
+            int_opt_value);
+        Benchmark<Mumps, int, int> b(&s, bench_file, out_file, anal_file, 
+            facto_file, sol_file, sol_spec_file);
         b.benchmark(multiple_bench);
     } else if (solver == "qr_mumps" || solver == "qrm") {
-        QR_Mumps s(A_file, An, b_file, bn);
-        Benchmark<QR_Mumps, std::string, int> b(&s, bench_file, out_file, anal_file, 
-                facto_file, sol_file, sol_spec_file);
+        QR_Mumps s(A_file, An, b_file, bn, string_opt_key, int_opt_value);
+        Benchmark<QR_Mumps, std::string, int> b(&s, bench_file, out_file, 
+            anal_file, facto_file, sol_file, sol_spec_file);
         b.benchmark(multiple_bench);
     }
 }
