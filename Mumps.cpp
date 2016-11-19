@@ -12,11 +12,12 @@
 #include "Benchmark.h"
 
 Mumps::Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-    bool n_present_b, int par, int sym, int comm, MPI_Comm mpi_comm,
-    std::string pb_spec_file, int int_opt_key, int int_opt_value) :
-    Solver(file_A, n_present_A, file_b, n_present_b), _mpi_comm(mpi_comm),
-    _pb_spec_file(pb_spec_file), _opt_key(int_opt_key), 
-    _opt_value(int_opt_value)
+        bool n_present_b, int par, int sym, int distr, bool loc, int format,
+        int comm, MPI_Comm mpi_comm, std::string pb_spec_file, int int_opt_key, 
+        int int_opt_value) :
+    Solver(file_A, n_present_A, file_b, n_present_b), _mpi_comm(mpi_comm), 
+        _pb_spec_file(pb_spec_file), _distr(distr), _loc(loc), _format(format), 
+        _opt_key(int_opt_key), _opt_value(int_opt_value)
 {
     _id.par = par;
     _id.sym = sym;
@@ -59,9 +60,14 @@ void Mumps::get_simple() {
 }
 
 void Mumps::get_A() {
-    if (is_host())
-        get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn}, 
-            _n_present_A, false);
+    if (_loc) {
+        get_MM(_file_A + std::to_string(_proc_id), _id.n, _id.n, _id.nz_loc, 
+            &_id.a_loc, {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false);
+        MPI_Reduce(&_id.nz_loc, &_id.nz, 1, MPI_INT, MPI_SUM, cst::HOST_ID, _mpi_comm);
+    } else
+        if (is_host())
+            get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn}, 
+                _n_present_A, false);
 }
 
 void Mumps::get_b() {
@@ -112,8 +118,12 @@ void Mumps::init() {
     mumps(parm::JOB_INIT);
     
     //Default Parameters
-    set_opt(parm::A_FORMAT, parm::A_ASSEMBLED_FORMAT);
-    set_opt(parm::A_DISTRIBUTION, parm::A_DISTR_ANALYSIS);
+//    _id.ICNTL(parm::OUT_ERROR) = 1;
+//    _id.ICNTL(parm::OUT_DIAGNOSTIC) = 1;
+//    _id.ICNTL(parm::OUT_GINFO) = 1;
+//    _id.ICNTL(parm::OUT_LEVEL) = 4;
+    set_opt(parm::A_FORMAT, _format);
+    set_opt(parm::A_DISTRIBUTION, _distr);
 //    set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_PAR);
 //    set_opt(parm::SYMPERM_PAR, parm::SYMPERM_PTSCOTCH);
     set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_SEQ);
@@ -154,13 +164,15 @@ void Mumps::solve() {
 
 void Mumps::metrics() {
     if (is_host()) {
-        _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
-            _r, _id.rhs);
-        _metrics.residual_norm(_rnrm);
-        _metrics.residual_orth(_onrm);
+        _metrics.init_metrics(_id.n, _id.n, _id.nz_loc, _id.a_loc, 
+            _id.irn_loc, _id.jcn_loc, _r, _id.rhs);
+        if (!_loc) {
+            _metrics.residual_norm(_rnrm);
+            _metrics.residual_orth(_onrm);
+            _metrics.A_norm(_anrm);
+        }
         _metrics.sol_norm(_xnrm);
         _metrics.b_norm(_bnrm);
-        _metrics.A_norm(_anrm);
     }
 }
 

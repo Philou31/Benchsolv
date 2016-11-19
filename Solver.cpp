@@ -59,7 +59,7 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
                 stream >> n;
                 stream >> nz;
             }
-            std::cout << "m: " << m << ", n: " << n << ", nz: " << nz << "\n";
+            std::clog << "m: " << m << ", n: " << n << ", nz: " << nz << "\n";
             n_present = false;
             continue;
         } else

@@ -32,18 +32,20 @@ class Mumps : public Solver {
 private:
     DMUMPS_STRUC_C _id;
     MPI_Comm _mpi_comm;
-    int _nb_procs = 1;
-    int _proc_id = 0;
+    int _nb_procs = 1, _proc_id = 0;
     double *_r;
     Metrics _metrics;
     // Problem specific info
     std::string _pb_spec_file;
-    int _opt_key;
-    int _opt_value;
+    int _distr;
+    bool _loc;
+    int _format;
+    int _opt_key, _opt_value;
 public:
     Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-    bool n_present_b, int par, int sym, int comm, MPI_Comm mpi_comm,
-    std::string pb_spec_file, int int_opt_key, int int_opt_value);
+        bool n_present_b, int par, int sym, int distr, bool loc, int format,
+        int comm, MPI_Comm mpi_comm, std::string pb_spec_file, int int_opt_key, 
+        int int_opt_value);
     ~Mumps();
     virtual bool is_host() override;
     void set_opt(int key, int value);

@@ -42,52 +42,72 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////
     // DEBUGGING ARGUMENTS
     ////////////////////////////////////////////////////
-    a.add<std::string>(cst::SOLVER, cst::SOLVER_C, "Type of solver  for the test", false,
-            cst::MUMPS, cmdline::oneof<std::string>(cst::MUMPS, cst::QR_MUMPS, cst::MUMPS_C, 
-            cst::QR_MUMPS_C));
+    //Matrix A
     a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
-            cst::A_WATER_MPHASE_SMALL_FILE);
+            cst::A_FARES_FILE_PREFIX);
     a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+    //Matrix B
     a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-            false, cst::RHS_WATER_MPHASE_SMALL_FILE);
+            false, cst::RHS_FARES_FILE);
     a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
+            false, cst::FALSE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+    //Mumps
+    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
+            false, parm::A_DISTR_FACTO_MAPPING, cmdline::oneof<int>(parm::A_DISTR_ANALYSIS,
+            parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
+    a.add<std::string>("A_loc", '&', "Are getting the matrix A locally or on master",
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
-    a.add<int>("symmetry", 'y', "Symmetry of the matrix A",
-            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
+    a.add<int>("A_format", '_', "Format of the matrix A",
+            false, parm::A_ASSEMBLED_FORMAT, cmdline::oneof<int>(parm::A_ASSEMBLED_FORMAT,
+            parm::A_ELEMENTAL_FORMAT));
+    a.add<int>("A_symmetry", 'y', "Symmetry of the matrix A",
+            false, parm::SYM_GENERAL, cmdline::oneof<int>(parm::SYM_UNSYM,
             parm::SYM_GENERAL, parm::SYM_DEFPOS));
     a.add<int>("working_host", 'w', "The host is working or not",
             false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
             parm::NOT_WORKING_HOST));
+    //Benchmark
+    ////Solver
+    a.add<std::string>(cst::SOLVER, cst::SOLVER_C, "Type of solver  for the test", false,
+            cst::MUMPS, cmdline::oneof<std::string>(cst::MUMPS, cst::QR_MUMPS, cst::MUMPS_C, 
+            cst::QR_MUMPS_C));
+    ////Test type
     a.add<std::string>(cst::MULTIPLE_BENCH, cst::MULTIPLE_BENCH_C, "Run multiple benchmarks or just options from analysis file",
             false, cst::OPTION, 
             cmdline::oneof<std::string>(cst::MULTIPLE, cst::SINGLE, cst::OPTION));
+    ////Option test
+    a.add<std::string>("string_opt_key", '(', "String key of the option to change (qr_mumps)",
+            false, cst::EMPTY_STRING_OPT_KEY);
+    a.add<int>("int_opt_key", ')', "Integer key of the option to change (mumps)",
+            false, cst::EMPTY_INT_OPT_KEY);
+    a.add<int>("int_opt_value", '-', "Integer value of the option to change (mumps/qr_mumps)",
+            false, cst::EMPTY_INT_OPT_VALUE);
+    ////Single test
     a.add<std::string>("bench_opt", '!', "File containing the options to test in single benchmark",
             false, "options/run.params");
+    ////Multiple tests (output, analysis, factorization, solve)
+    a.add<std::string>("output", 't', "File containing the options to test for output",
+            false, "options/mumps/output.opt");
     a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
             false, "options/mumps/analysis.opt");
     a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
             false, cst::EMPTY_FILE);
-    a.add<std::string>("output", 't', "File containing the options to test for output",
-            false, "options/mumps/output.opt");
     a.add<std::string>("solve", 'p', "File containing the options to test in solve",
             false, "options/mumps/solve.opt");
-    a.add<std::string>("mumps_output", 'm', "File where all mumps outputs will go",
-            false, "res/mumps.txt");
+    //Output
+    ////Output files
+    a.add<std::string>("fortran_output", 'm', "File where all fortran outputs will go",
+            false, "res/fortran.txt");
     a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
             false, "res/out.txt");
     a.add<std::string>("error_file", 'e', "File where all error outputs will go",
             false, "res/err.txt");
+    ////Metrics files
     a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
             false, "res/sol_spec.txt");
     a.add<std::string>("pb_spec_metrics", 'k', "File where all the problem specific metrics will go",
             false, "res/pb_spec.txt");
-    a.add<std::string>("string_opt_key", '(', "String key of the option to change (qr_mumps)",
-            false, "");
-    a.add<int>("int_opt_key", ')', "Integer key of the option to change (mumps)",
-            false, -1);
-    a.add<int>("int_opt_value", '-', "Integer value of the option to change (mumps/qr_mumps)",
-            false, -1);
     
     
     ////////////////////////////////////////////////////
@@ -141,38 +161,53 @@ int main(int argc, char **argv) {
     a.parse_check(argc, argv);
 
     // boolean flags are referred by calling exist() method.
-    std::string solver = a.get<std::string>("solver");
+    //Matrix A
     std::string A_file = a.get<std::string>("Amatrix");
-    bool An = a.get<std::string>("A_n_present") == cst::TRUE;
+    bool An = !cst::TRUE.compare(a.get<std::string>("A_n_present"));
+    //Matrix B
     std::string b_file = a.get<std::string>("RHS");
-    bool bn = a.get<std::string>("b_n_present") == cst::TRUE;
-    int sym = a.get<int>("symmetry");
+    bool bn = !cst::TRUE.compare(a.get<std::string>("b_n_present"));
+    //Benchmark
+    ////Solver
+    std::string solver = a.get<std::string>("solver");
+    ////Mumps
+    int sym = a.get<int>("A_symmetry");
+    int distr = a.get<int>("A_distribution");
+    bool loc = !cst::TRUE.compare(a.get<std::string>("A_loc"));
+    int format = a.get<int>("A_format");
     int par = a.get<int>("working_host");
-    std::string multiple_bench = a.get<std::string>("multiple_bench");
+    ////Test type
+    std::string multiple_bench = a.get<std::string>(cst::MULTIPLE_BENCH);
+    ////Option test
+    std::string string_opt_key = a.get<std::string>("string_opt_key");
+    int int_opt_key = a.get<int>("int_opt_key");
+    int int_opt_value = a.get<int>("int_opt_value");
+    ////Single test
     std::string bench_file = a.get<std::string>("bench_opt");
+    ////Mulitple tests (output, analysis, factorization, solve)
     std::string out_file = a.get<std::string>("output");
     std::string anal_file = a.get<std::string>("analysis");
     std::string facto_file = a.get<std::string>("facto");
     std::string sol_file = a.get<std::string>("solve");
-    std::string mumps_output = a.get<std::string>("mumps_output");
+    //Output
+    ////Output files
+    std::string fortran_output = a.get<std::string>("fortran_output");
     std::string output_file = a.get<std::string>("output_file");
     std::string error_file = a.get<std::string>("error_file");
+    ////Metrics files
     std::string sol_spec_file = a.get<std::string>("sol_spec_metrics");
     std::string pb_spec_file = a.get<std::string>("pb_spec_metrics");
-    std::string string_opt_key = a.get<std::string>("string_opt_key");
-    int int_opt_key = a.get<int>("int_opt_key");
-    int int_opt_value = a.get<int>("int_opt_value");
     
-//    FILE *f = freopen(mumps_output.c_str(), "w", stdout);
-//    std::cout << "Redirecting fortran output to : " << mumps_output << 
-//            " at adress: " << f << "\n";
-//    std::ofstream coutstr(output_file);
-//    std::cout.rdbuf(coutstr.rdbuf());
-//    std::ofstream cerrstr(error_file);
-//    std::cerr.rdbuf(cerrstr.rdbuf());
+    FILE *f = freopen(fortran_output.c_str(), "w", stdout);
+    std::cout << "Redirecting fortran output to : " << fortran_output << 
+            " at adress: " << f << "\n";
+    std::ofstream coutstr(output_file);
+    std::cout.rdbuf(coutstr.rdbuf());
+    std::ofstream cerrstr(error_file);
+    std::cerr.rdbuf(cerrstr.rdbuf());
     
     if (solver == "mumps" || solver == "m") {
-        Mumps s(A_file, An, b_file, bn, par, sym,
+        Mumps s(A_file, An, b_file, bn, par, sym, distr, loc, format,
             cst::USE_COMM_WORLD, MPI_COMM_WORLD, pb_spec_file, int_opt_key, 
             int_opt_value);
         Benchmark<Mumps, int, int> b(&s, bench_file, out_file, anal_file, 

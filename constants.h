@@ -22,6 +22,7 @@ namespace cst
     //Arguments
     const std::string EMPTY_STRING_OPT_KEY = "";
     const int EMPTY_INT_OPT_KEY = -1;
+    const int EMPTY_INT_OPT_VALUE = -1;
     //Solver
     const std::string SOLVER = "solver";
     const char SOLVER_C = 's';
@@ -75,8 +76,6 @@ namespace cst
     const std::string A_MHD_50_FILE = cst::DATA_FOLDER + "MHD/50/A.txt";
     const std::string RHS_MHD_50_FILE = cst::DATA_FOLDER + "MHD/50/RHS.txt";
     const std::string Sol_MHD_50_FILE = cst::DATA_FOLDER + "MHD/50/Sol.txt";
-    //Commented Lines in MatrixMarket format
-    const int DEFAULT_NB_COMMENTED_LINES = 0;
     
     //MATHS
     const double ABS_EPSILON = 1e-12;

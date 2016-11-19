@@ -57,7 +57,7 @@ public:
     void multiple_benchmark();
 };
 
-#include "Benchmark_Impl.h"
+#include "Benchmark.cpp"
 
 #endif /* BENCHMARK_H */
 
