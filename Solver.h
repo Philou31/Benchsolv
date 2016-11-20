@@ -24,12 +24,12 @@
 
 class Solver {
 protected:
+    std::string _test_id;
     std::string _file_A;
     bool _n_present_A;
     std::string _file_b;
     bool _n_present_b;
     double _rnrm{0}, _onrm{0}, _anrm{0}, _bnrm{0}, _xnrm{0};
-    std::string _test_id;
 public:
     Solver() {}
     Solver(std::string test_id, std::string file_A, bool n_present_A, 
