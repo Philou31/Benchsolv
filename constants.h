@@ -15,9 +15,20 @@
 
 namespace cst
 {
+    const std::string ALPHANUM =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    const std::string EMPTY_ID = "01234567";
+ 
     //MPI
     const int USE_COMM_WORLD = -987654;
     const int HOST_ID = 0;
+    const int TAG_GO = 0;
+    const int TAG_SIZE = 1;
+    const int TAG_ARRAY = 2;
+    const int TAG_IRN = 3;
+    const int TAG_JCN = 4;
     
     //Arguments
     const std::string EMPTY_STRING_OPT_KEY = "";

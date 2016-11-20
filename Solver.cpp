@@ -7,8 +7,9 @@
 
 #include "Solver.h"
 
-Solver::Solver(std::string file_A, bool n_present_A, std::string file_b, 
-    bool n_present_b): _file_A(file_A), _n_present_A(n_present_A), 
+Solver::Solver(std::string test_id, std::string file_A, bool n_present_A, 
+    std::string file_b, bool n_present_b):
+    _test_id(test_id), _file_A(file_A), _n_present_A(n_present_A), 
     _file_b(file_b), _n_present_b(n_present_b)
     {}
 
@@ -34,10 +35,10 @@ void Solver::get_simple(int &m, int &n, int &nz, double **values,
     };
 }
 
-void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
+void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values, 
         std::vector<int**> indexes, bool n_present, bool rhs) {
     std::ifstream infile(file.c_str());
-    std::cout << "Getting matrix in file: " << file << "\n";
+    std::cout << "\nGetting matrix in file: " << file << "\n";
 
     // If we couldn't open the output file stream for reading
     if (!infile) {
@@ -58,8 +59,8 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
                 stream >> m;
                 stream >> n;
                 stream >> nz;
+                std::clog << "m: " << m << ", n: " << n << ", nz: " << nz << "\n";
             }
-            std::clog << "m: " << m << ", n: " << n << ", nz: " << nz << "\n";
             n_present = false;
             continue;
         } else

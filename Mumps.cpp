@@ -11,14 +11,18 @@
 #include "constants.h"
 #include "Benchmark.h"
 
-Mumps::Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-        bool n_present_b, int par, int sym, int distr, bool loc, int format,
-        int comm, MPI_Comm mpi_comm, std::string pb_spec_file, int int_opt_key, 
-        int int_opt_value) :
-    Solver(file_A, n_present_A, file_b, n_present_b), _mpi_comm(mpi_comm), 
-        _pb_spec_file(pb_spec_file), _distr(distr), _loc(loc), _format(format), 
-        _opt_key(int_opt_key), _opt_value(int_opt_value)
+Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A, 
+    std::string file_b, bool n_present_b, int par, int sym, int distr, 
+    bool loc, int format, int comm, MPI_Comm mpi_comm, 
+    std::string pb_spec_file, int int_opt_key, int int_opt_value):
+    Solver(test_id, file_A, n_present_A, file_b, n_present_b), 
+    _mpi_comm(mpi_comm), _pb_spec_file(pb_spec_file), _distr(distr), 
+    _loc(loc), _format(format), _opt_key(int_opt_key), _opt_value(int_opt_value)
 {
+    std::cout << "Mumps initialization:\nWorking host: " << par << 
+        "\nSymmetry: " << sym << "\nCommunicator: " << comm << "\nFormat: " << 
+        format << "\nDistribution: " << distr << "\nDistributed inputs: " << 
+        loc << "\n";
     _id.par = par;
     _id.sym = sym;
     _id.comm_fortran = comm;
@@ -64,6 +68,8 @@ void Mumps::get_A() {
         get_MM(_file_A + std::to_string(_proc_id), _id.n, _id.n, _id.nz_loc, 
             &_id.a_loc, {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false);
         MPI_Reduce(&_id.nz_loc, &_id.nz, 1, MPI_INT, MPI_SUM, cst::HOST_ID, _mpi_comm);
+        if (is_host())
+            std::clog << "All fronts gathered, nz: " << _id.nz << "\n";
     } else
         if (is_host())
             get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn}, 
@@ -80,12 +86,20 @@ void Mumps::display_A(int n) {
     if (is_host()) display_ass(_id.a, n, {_id.irn, _id.jcn});
 }
 
+void Mumps::display_A_loc(int n) {
+    if (is_host()) display_ass(_id.a_loc, n, {_id.irn_loc, _id.jcn_loc});
+}
+
 void Mumps::display_b(int n) {
     if (is_host()) display_ass(_id.rhs, n, {});    
 }
 
 void Mumps::display_A() {
     if (is_host()) display_ass(_id.a, _id.nz, {_id.irn, _id.jcn});
+}
+
+void Mumps::display_A_loc() {
+    if (is_host()) display_ass(_id.a_loc, _id.nz_loc, {_id.irn_loc, _id.jcn_loc});
 }
 
 void Mumps::display_b() {
@@ -114,26 +128,29 @@ void Mumps::init() {
     int ierr = MPI_Init (NULL, NULL);
     ierr = MPI_Comm_size(_mpi_comm, &_nb_procs);
     ierr = MPI_Comm_rank(_mpi_comm, &_proc_id);
-    std::cerr << "MPI initialization in Mumps, error code: " << ierr << "\n";
+    std::cout << "MPI initialization in Mumps, error code: " << ierr << "\n\n";
     mumps(parm::JOB_INIT);
     
-    //Default Parameters
-//    _id.ICNTL(parm::OUT_ERROR) = 1;
-//    _id.ICNTL(parm::OUT_DIAGNOSTIC) = 1;
-//    _id.ICNTL(parm::OUT_GINFO) = 1;
-//    _id.ICNTL(parm::OUT_LEVEL) = 4;
-    set_opt(parm::A_FORMAT, _format);
-    set_opt(parm::A_DISTRIBUTION, _distr);
-//    set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_PAR);
-//    set_opt(parm::SYMPERM_PAR, parm::SYMPERM_PTSCOTCH);
+    if (is_host()) {
+        std::cout << "Setting distribution and format:\n";
+        set_opt(parm::A_FORMAT, _format);
+        set_opt(parm::A_DISTRIBUTION, _distr);
+    }
+    
+    if (is_host())
+        std::cout << "\nDefault options:\n";
     set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_SEQ);
     set_opt(parm::SYMPERM_SEQ, parm::SYMPERM_SCOTCH);
-    set_opt(parm::ITER_REFINEMENT, parm::ITERREF_NUM);
     set_opt(parm::ERR_ANALYSIS, parm::ERRANAL_FULL);
     set_opt(parm::NULL_PIVOT, parm::NULL_PIVOT_YES);
+    set_opt(parm::SCALING, parm::SCALE_ANALYSIS);
     
     //Test Parameters
-    if (_opt_key != cst::EMPTY_INT_OPT_KEY) set_opt(_opt_key, _opt_value);
+    if (_opt_key != cst::EMPTY_INT_OPT_KEY) {
+        if (is_host())
+            std::cout << "Benchmark option to test:\n";
+        set_opt(_opt_key, _opt_value);
+    }
 }
 
 void Mumps::analyse() {
@@ -162,15 +179,57 @@ void Mumps::solve() {
     mumps(parm::JOB_SOLVE);
 }
 
-void Mumps::metrics() {
+void Mumps::assemble_A() {
+    int GO = 42;
+    MPI_Status status;
     if (is_host()) {
-        _metrics.init_metrics(_id.n, _id.n, _id.nz_loc, _id.a_loc, 
-            _id.irn_loc, _id.jcn_loc, _r, _id.rhs);
-        if (!_loc) {
-            _metrics.residual_norm(_rnrm);
-            _metrics.residual_orth(_onrm);
-            _metrics.A_norm(_anrm);
+        _id.a = new double[_id.nz];
+        _id.irn = new int[_id.nz];
+        _id.jcn = new int[_id.nz];
+        for (int i=0; i < _id.nz_loc; ++i) {
+            _id.a[i] = _id.a_loc[i];
+            _id.irn[i] = _id.irn_loc[i];
+            _id.jcn[i] = _id.jcn_loc[i];
         }
+        int beg = 0;
+        int size = 0;
+        for (int i=0; i < _nb_procs-1; ++i) {
+            MPI_Send(&GO, 1, MPI_INT, _proc_id+i+1, cst::TAG_GO, _mpi_comm);
+            MPI_Recv(&size, 1, MPI_INT, _proc_id+i+1, cst::TAG_SIZE,
+                _mpi_comm, &status);
+            MPI_Recv(_id.a+_id.nz_loc+beg, size, MPI_DOUBLE, _proc_id+i+1,
+                cst::TAG_ARRAY, _mpi_comm, &status);
+            MPI_Recv(_id.irn+_id.nz_loc+beg, size, MPI_INT, _proc_id+i+1,
+                cst::TAG_IRN, _mpi_comm, &status);
+            MPI_Recv(_id.jcn+_id.nz_loc+beg, size, MPI_INT, _proc_id+i+1,
+                cst::TAG_JCN, _mpi_comm, &status);
+            beg += size;
+        }
+    } else {
+        MPI_Recv(&GO, 1, MPI_INT, cst::HOST_ID, cst::TAG_GO, _mpi_comm, 
+            &status);
+        MPI_Send(&_id.nz_loc, 1, MPI_INT, cst::HOST_ID, cst::TAG_SIZE, 
+            _mpi_comm);
+        MPI_Send(_id.a_loc, _id.nz_loc, MPI_DOUBLE, cst::HOST_ID, 
+            cst::TAG_ARRAY, _mpi_comm);
+        MPI_Send(_id.irn_loc, _id.nz_loc, MPI_INT, cst::HOST_ID, 
+            cst::TAG_IRN, _mpi_comm);
+        MPI_Send(_id.jcn_loc, _id.nz_loc, MPI_INT, cst::HOST_ID, 
+            cst::TAG_JCN, _mpi_comm);
+    }
+    MPI_Barrier(_mpi_comm);
+}
+
+void Mumps::metrics() {
+    if (_loc) {
+        assemble_A();
+    }
+    if (is_host()) {
+        _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
+            _r, _id.rhs);
+        _metrics.residual_norm(_rnrm);
+        _metrics.residual_orth(_onrm);
+        _metrics.A_norm(_anrm);
         _metrics.sol_norm(_xnrm);
         _metrics.b_norm(_bnrm);
     }
@@ -226,16 +285,16 @@ void Mumps::finalize() {
         problem_spec_metrics_output();
     mumps(parm::JOB_END);
     int ierr = MPI_Finalize();
-    std::cerr << "MPI finalization in Mumps, error code: " << ierr << "\n";
+    std::cout << "MPI finalization in Mumps, error code: " << ierr << "\n";
 }
 
 void Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "xnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\te_elim_flops\t" <<
-            "e_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\ttiny_piv\tnull_piv\t" <<
-            "iter_ref\n";
+        myfile << "test_id\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
+            "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
+            "tiny_piv\tnull_piv\titer_ref\n";
         myfile.close();
     }
 }
@@ -260,15 +319,15 @@ void Mumps::output_metrics(std::string file) {
             "null pivots           = " << _id.INFOG(28) << "\n" <<
             "iterative refinement  = " << _id.INFOG(15) << "\n" <<
             "\n";
-    
+
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << _xnrm << "\t" << _rnrm << "\t" << _onrm << "\t" << _id.RINFOG(6) << 
-            "\t" << _id.RINFOG(7) << "\t" << _id.RINFOG(8) << "\t" << 
-            _id.RINFOG(9) << "\t" << _id.RINFOG(1) << "\t" << _id.RINFOG(2) << 
-            "\t" << _id.RINFOG(3) << "\t" << _id.INFOG(12) << "\t" << 
-            _id.INFOG(13) << "\t" << _id.INFOG(25) << "\t" << _id.INFOG(28) << 
-            "\t" << _id.INFOG(15) << "\n";
+        myfile << _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
+            "\t" << _id.RINFOG(6) << "\t" << _id.RINFOG(7) << "\t" << 
+            _id.RINFOG(8) << "\t" << _id.RINFOG(9) << "\t" << _id.RINFOG(1) << 
+            "\t" << _id.RINFOG(2) << "\t" << _id.RINFOG(3) << "\t" << 
+            _id.INFOG(12) << "\t" << _id.INFOG(13) << "\t" << _id.INFOG(25) << 
+            "\t" << _id.INFOG(28) << "\t" << _id.INFOG(15) << "\n";
         myfile.close();
     }
 }

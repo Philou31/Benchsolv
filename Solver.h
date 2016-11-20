@@ -29,10 +29,11 @@ protected:
     std::string _file_b;
     bool _n_present_b;
     double _rnrm{0}, _onrm{0}, _anrm{0}, _bnrm{0}, _xnrm{0};
+    std::string _test_id;
 public:
     Solver() {}
-    Solver(std::string file_A, bool n_present_A, std::string file_b, 
-        bool n_present_b);
+    Solver(std::string test_id, std::string file_A, bool n_present_A, 
+        std::string file_b, bool n_present_b);
     virtual bool is_host() = 0;
     void get_simple(int &m, int &n, int &nz, double **values, int **irn,
         int **jcn, int &nrhs, int &lrhs, double **rhs);

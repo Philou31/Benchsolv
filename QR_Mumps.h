@@ -32,8 +32,9 @@ private:
     std::string _opt_key;
     int _opt_value;
 public:
-    QR_Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-    bool n_present_b, std::string string_opt_key, int int_opt_value);
+    QR_Mumps(std::string test_id, std::string file_A, bool n_present_A, 
+        std::string file_b, bool n_present_b, std::string string_opt_key, 
+        int int_opt_value);
     ~QR_Mumps();
     virtual bool is_host() override;
     void set_opt(std::string key, int value);

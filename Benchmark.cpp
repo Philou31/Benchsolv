@@ -24,7 +24,21 @@ Benchmark<S,K,V>::Benchmark(S *solver, std::string b_file, std::string o_file,
     std::string sol_spec_file): 
     _solver(solver), _b_file(b_file), _o_file(o_file), _a_file(a_file), _f_file(f_file), 
     _s_file(s_file), _sol_spec_file(sol_spec_file)
-{}
+{
+    std::cout << "\nOutputs:\n";
+    if (b_file != cst::EMPTY_FILE)
+        std::cout << "benchmark option file: " << b_file << "\n";
+    if (o_file != cst::EMPTY_FILE)
+        std::cout << "output options file: " << o_file << "\n";
+    if (a_file != cst::EMPTY_FILE)
+        std::cout << "analysis options file:" << a_file << "\n";
+    if (f_file != cst::EMPTY_FILE)
+        std::cout << "factorization options file: " << f_file << "\n";
+    if (s_file != cst::EMPTY_FILE)
+        std::cout << "solve options file: " << s_file << "\n";
+    if (sol_spec_file != cst::EMPTY_FILE)
+        std::cout << "solution specific output file: " << sol_spec_file << "\n\n";
+}
 
 template <class S, typename K, typename V>
 Benchmark<S,K,V>::~Benchmark()
@@ -171,7 +185,6 @@ void Benchmark<S,K,V>::solve() {
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::output_metrics() {
-    std::cout << "Error checking\n";
     _solver->metrics();
     _solver->output_metrics(_sol_spec_file);
 }
@@ -207,17 +220,18 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::benchmark(std::string multiple_bench) {
+    _solver->output_metrics_init(_sol_spec_file);
     if (!multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
         _o_file == _a_file && _a_file == _f_file && _f_file == _s_file && 
-        _s_file == cst::EMPTY_FILE))
+        _s_file == cst::EMPTY_FILE)) {
         call();
+    }
     else if (!multiple_bench.compare(cst::SINGLE)) single_benchmark();
     else multiple_benchmark();
 }
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::single_benchmark() {
-    _solver->output_metrics_init(_sol_spec_file);
     bool b = iterate_solver(_b_file);
     if(b) std::cout << "\nSingle benchmark executed.\n";
     else {
@@ -227,7 +241,6 @@ void Benchmark<S,K,V>::single_benchmark() {
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::multiple_benchmark() {
-    _solver->output_metrics_init(_sol_spec_file);
     iterate_solver(_o_file);
     bool a = iterate_solver(_a_file);
     // If no previous test, run an analysis

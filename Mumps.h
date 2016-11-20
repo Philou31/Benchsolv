@@ -42,10 +42,10 @@ private:
     int _format;
     int _opt_key, _opt_value;
 public:
-    Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-        bool n_present_b, int par, int sym, int distr, bool loc, int format,
-        int comm, MPI_Comm mpi_comm, std::string pb_spec_file, int int_opt_key, 
-        int int_opt_value);
+    Mumps(std::string test_id, std::string file_A, bool n_present_A, 
+        std::string file_b, bool n_present_b, int par, int sym, int distr, 
+        bool loc, int format, int comm, MPI_Comm mpi_comm, 
+        std::string pb_spec_file, int int_opt_key, int int_opt_value);
     ~Mumps();
     virtual bool is_host() override;
     void set_opt(int key, int value);
@@ -54,10 +54,12 @@ public:
     virtual void get_A() override;
     virtual void get_b() override;
     virtual void display_A(int n) override;
+    void display_A_loc(int n);
     virtual void display_x(int n) override;
     virtual void display_b(int n) override;
     virtual void display_r(int n) override;
     virtual void display_A() override;
+    void display_A_loc();
     virtual void display_x() override;
     virtual void display_b() override;
     virtual void display_r() override;
@@ -68,6 +70,7 @@ public:
     virtual void alloc_solve_residual() override;
     virtual void alloc_rhs() override;
     virtual void solve() override;
+    void assemble_A();
     virtual void metrics() override;
     virtual void call() override;
     virtual bool get_b_before_facto() override;

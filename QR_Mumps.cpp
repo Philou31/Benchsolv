@@ -8,9 +8,10 @@
 #include "QR_Mumps.h"
 #include "constants.h"
 
-QR_Mumps::QR_Mumps(std::string file_A, bool n_present_A, std::string file_b, 
-    bool n_present_b, std::string string_opt_key, int int_opt_value): 
-    Solver(file_A, n_present_A, file_b, n_present_b), 
+QR_Mumps::QR_Mumps(std::string test_id, std::string file_A, bool n_present_A, 
+    std::string file_b, bool n_present_b, std::string string_opt_key, 
+    int int_opt_value):
+    Solver(test_id, file_A, n_present_A, file_b, n_present_b),
     _opt_key(string_opt_key), _opt_value(int_opt_value)
 {
     std::cout << "INITIALIZE QR_MUMPS !";
@@ -208,9 +209,10 @@ void QR_Mumps::output_metrics(std::string sol_spec_file) {
     
     std::ofstream myfile;
     myfile.open(sol_spec_file.c_str());
-    myfile << _xnrm << "\t" << _rnrm << "\t" << _onrm << "\t" << 
-        _qrm_mat.gstats[qrm_nnz_r_] << "\t" << _qrm_mat.gstats[qrm_nnz_h_] <<
-        "\t" << _qrm_mat.gstats[qrm_e_nnz_r_] << "\t" << 
+    myfile << _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
+        "\t" << _qrm_mat.gstats[qrm_nnz_r_] << "\t" << 
+        _qrm_mat.gstats[qrm_nnz_h_] << "\t" << 
+        _qrm_mat.gstats[qrm_e_nnz_r_] << "\t" << 
         _qrm_mat.gstats[qrm_e_nnz_h_] << "\t" << 
         _qrm_mat.gstats[qrm_e_facto_flops_] << "\t" << 
         _qrm_mat.gstats[qem_e_facto_mempeak_] << "\n";

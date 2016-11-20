@@ -12,18 +12,24 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <ctime>
 #include "cmdline.h"
 #include "Mumps.h"
 #include "QR_Mumps.h"
 #include "Benchmark.h"
 #include "constants.h"
 
-bool test() {
-    std::cout << "caca\n";
-    return true;
+std::string gen_random_id() {
+    srand(static_cast<unsigned int>(time(0)));
+    std::string s = cst::EMPTY_ID;
+    for (unsigned int i = 0; i < s.length(); ++i) {
+        s[i] = cst::ALPHANUM[std::rand() % (sizeof(cst::ALPHANUM) - 1)];
+    }
+    return s;
 }
 
 int main(int argc, char **argv) {
+    std::string test_id = gen_random_id();
     cmdline::parser a;
     // add specified type of variable.
     // 1st argument is long name
@@ -44,25 +50,25 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////
     //Matrix A
     a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
-            cst::A_FARES_FILE_PREFIX);
+            cst::A_MHD_10_FILE);
     a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Matrix B
     a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-            false, cst::RHS_FARES_FILE);
+            false, cst::RHS_MHD_10_FILE);
     a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
-            false, cst::FALSE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Mumps
     a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-            false, parm::A_DISTR_FACTO_MAPPING, cmdline::oneof<int>(parm::A_DISTR_ANALYSIS,
+            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_DISTR_ANALYSIS,
             parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
     a.add<std::string>("A_loc", '&', "Are getting the matrix A locally or on master",
-            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+            false, cst::FALSE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     a.add<int>("A_format", '_', "Format of the matrix A",
             false, parm::A_ASSEMBLED_FORMAT, cmdline::oneof<int>(parm::A_ASSEMBLED_FORMAT,
             parm::A_ELEMENTAL_FORMAT));
     a.add<int>("A_symmetry", 'y', "Symmetry of the matrix A",
-            false, parm::SYM_GENERAL, cmdline::oneof<int>(parm::SYM_UNSYM,
+            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
             parm::SYM_GENERAL, parm::SYM_DEFPOS));
     a.add<int>("working_host", 'w', "The host is working or not",
             false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
@@ -92,17 +98,17 @@ int main(int argc, char **argv) {
     a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
             false, "options/mumps/analysis.opt");
     a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
-            false, cst::EMPTY_FILE);
+            false, "options/mumps/factorization.opt");
     a.add<std::string>("solve", 'p', "File containing the options to test in solve",
             false, "options/mumps/solve.opt");
     //Output
     ////Output files
     a.add<std::string>("fortran_output", 'm', "File where all fortran outputs will go",
-            false, "res/fortran.txt");
+            false, "res/fortran");
     a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
-            false, "res/out.txt");
+            false, "res/out");
     a.add<std::string>("error_file", 'e', "File where all error outputs will go",
-            false, "res/err.txt");
+            false, "res/err");
     ////Metrics files
     a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
             false, "res/sol_spec.txt");
@@ -191,9 +197,9 @@ int main(int argc, char **argv) {
     std::string sol_file = a.get<std::string>("solve");
     //Output
     ////Output files
-    std::string fortran_output = a.get<std::string>("fortran_output");
-    std::string output_file = a.get<std::string>("output_file");
-    std::string error_file = a.get<std::string>("error_file");
+    std::string fortran_output = a.get<std::string>("fortran_output") + "_" + test_id;
+    std::string output_file = a.get<std::string>("output_file") + "_" + test_id;
+    std::string error_file = a.get<std::string>("error_file") + "_" + test_id;
     ////Metrics files
     std::string sol_spec_file = a.get<std::string>("sol_spec_metrics");
     std::string pb_spec_file = a.get<std::string>("pb_spec_metrics");
@@ -206,15 +212,17 @@ int main(int argc, char **argv) {
     std::ofstream cerrstr(error_file);
     std::cerr.rdbuf(cerrstr.rdbuf());
     
+    std::cout << "TEST ID: " << test_id << "\n";
     if (solver == "mumps" || solver == "m") {
-        Mumps s(A_file, An, b_file, bn, par, sym, distr, loc, format,
+        Mumps s(test_id, A_file, An, b_file, bn, par, sym, distr, loc, format,
             cst::USE_COMM_WORLD, MPI_COMM_WORLD, pb_spec_file, int_opt_key, 
             int_opt_value);
         Benchmark<Mumps, int, int> b(&s, bench_file, out_file, anal_file, 
             facto_file, sol_file, sol_spec_file);
         b.benchmark(multiple_bench);
     } else if (solver == "qr_mumps" || solver == "qrm") {
-        QR_Mumps s(A_file, An, b_file, bn, string_opt_key, int_opt_value);
+        QR_Mumps s(test_id, A_file, An, b_file, bn, string_opt_key, 
+            int_opt_value);
         Benchmark<QR_Mumps, std::string, int> b(&s, bench_file, out_file, 
             anal_file, facto_file, sol_file, sol_spec_file);
         b.benchmark(multiple_bench);

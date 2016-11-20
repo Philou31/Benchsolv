@@ -36,7 +36,7 @@ namespace parm {
     const int A_ASSEMBLED_FORMAT(0);
     const int A_ELEMENTAL_FORMAT(1);
     //Distribution
-    const int A_DISTRIBUTION(5);
+    const int A_DISTRIBUTION(18);
     const int A_CENTRALIZED(0);
     const int A_DISTR_FACTO_MAPPING(1);
     const int A_DISTR_FACTO(2);
