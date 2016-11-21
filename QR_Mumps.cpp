@@ -213,7 +213,7 @@ void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta,
         "\n";
     
     std::ofstream myfile;
-    myfile.open(sol_spec_file.c_str());
+    myfile.open(sol_spec_file.c_str(), std::ofstream::app);
     myfile << ta << "\t" << tf << "\t" << ts << "\t" <<
         _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
         "\t" << _qrm_mat.gstats[qrm_nnz_r_] << "\t" << 
