@@ -14,7 +14,7 @@ QR_Mumps::QR_Mumps(std::string test_id, std::string file_A, bool n_present_A,
     Solver(test_id, file_A, n_present_A, file_b, n_present_b),
     _opt_key(string_opt_key), _opt_value(int_opt_value)
 {
-    std::cout << "INITIALIZE QR_MUMPS !";
+    std::cout << "INITIALIZE QR_MUMPS !\n";
     init();
     get_A();
     get_b();
@@ -188,28 +188,34 @@ void QR_Mumps::finalize() {
 void QR_Mumps::output_metrics_init(std::string file) {
     std::ofstream myfile;
     myfile.open(file.c_str(), std::ofstream::app);
-    myfile << "xnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
+    myfile << "ta\ttf\ts\ttest_id\txnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
         "facto_flops\te_mempeak\n";
     myfile.close();
 }
 
-void QR_Mumps::output_metrics(std::string sol_spec_file) {
-    std::cout << "||A||          =  " << _anrm << "\n" <<
-        "||b||          =  " << _bnrm << "\n" <<
-        "||x||          =  " << _xnrm << "\n" <<
-        "||r||/||A||    =  " << _rnrm << "\n" <<
-        "||A^tr||/||r|| =  " << _onrm << "\n" <<
+void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta, 
+        long long tf, long long ts) {
+    std::cout << 
+        "\ntime for analysis =  " << ta << "\n" <<
+        "time for facto    =  " << ta << "\n" <<
+        "time for solve    =  " << ta << "\n" <<
+        "||A||             =  " << _anrm << "\n" <<
+        "||b||             =  " << _bnrm << "\n" <<
+        "||x||             =  " << _xnrm << "\n" <<
+        "||r||/||A||       =  " << _rnrm << "\n" <<
+        "||A^tr||/||r||    =  " << _onrm << "\n" <<
         "Nonzeros in R                 : " << _qrm_mat.gstats[qrm_nnz_r_] << "\n" <<
         "Nonzeros in H                 : " << _qrm_mat.gstats[qrm_nnz_h_] << "\n" <<
-        "Estimated nonzeros in R                 : " << _qrm_mat.gstats[qrm_e_nnz_r_] << "\n" <<
-        "Estimated nonzeros in H                 : " << _qrm_mat.gstats[qrm_e_nnz_h_] << "\n" <<
+        "Estimated nonzeros in R       : " << _qrm_mat.gstats[qrm_e_nnz_r_] << "\n" <<
+        "Estimated nonzeros in H       : " << _qrm_mat.gstats[qrm_e_nnz_h_] << "\n" <<
         "Total flops at facto          : " << _qrm_mat.gstats[qrm_e_facto_flops_] << "\n" <<
         "Estimated Memory Peak at facto: " << _qrm_mat.gstats[qem_e_facto_mempeak_] << "\n" <<
         "\n";
     
     std::ofstream myfile;
     myfile.open(sol_spec_file.c_str());
-    myfile << _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
+    myfile << ta << "\t" << tf << "\t" << ts << "\t" <<
+        _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
         "\t" << _qrm_mat.gstats[qrm_nnz_r_] << "\t" << 
         _qrm_mat.gstats[qrm_nnz_h_] << "\t" << 
         _qrm_mat.gstats[qrm_e_nnz_r_] << "\t" << 

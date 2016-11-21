@@ -186,7 +186,7 @@ void Benchmark<S,K,V>::solve() {
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::output_metrics() {
     _solver->metrics();
-    _solver->output_metrics(_sol_spec_file);
+    _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts);
 }
     
 template <class S, typename K, typename V>

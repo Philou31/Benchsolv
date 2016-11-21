@@ -204,13 +204,13 @@ int main(int argc, char **argv) {
     std::string sol_spec_file = a.get<std::string>("sol_spec_metrics");
     std::string pb_spec_file = a.get<std::string>("pb_spec_metrics");
     
-    FILE *f = freopen(fortran_output.c_str(), "w", stdout);
-    std::cout << "Redirecting fortran output to : " << fortran_output << 
-            " at adress: " << f << "\n";
-    std::ofstream coutstr(output_file);
-    std::cout.rdbuf(coutstr.rdbuf());
-    std::ofstream cerrstr(error_file);
-    std::cerr.rdbuf(cerrstr.rdbuf());
+//    FILE *f = freopen(fortran_output.c_str(), "w", stdout);
+//    std::cout << "Redirecting fortran output to : " << fortran_output << 
+//            " at adress: " << f << "\n";
+//    std::ofstream coutstr(output_file);
+//    std::cout.rdbuf(coutstr.rdbuf());
+//    std::ofstream cerrstr(error_file);
+//    std::cerr.rdbuf(cerrstr.rdbuf());
     
     std::cout << "TEST ID: " << test_id << "\n";
     if (solver == "mumps" || solver == "m") {

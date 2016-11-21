@@ -292,16 +292,20 @@ void Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "test_id\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
+        myfile << "ta\ttf\ts\ttest_id\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
             "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
             "tiny_piv\tnull_piv\titer_ref\n";
         myfile.close();
     }
 }
 
-void Mumps::output_metrics(std::string file) {
+void Mumps::output_metrics(std::string file, long long ta, 
+        long long tf, long long ts) {
     if (is_host()) {
-        std::cout << "||A||                 =  " << _anrm << "\n" <<
+        std::cout << "\ntime for analysis     =  " << ta << "\n" <<
+            "time for facto        =  " << ta << "\n" <<
+            "time for solve        =  " << ta << "\n" <<
+            "||A||                 =  " << _anrm << "\n" <<
             "||b||                 =  " << _bnrm << "\n" <<
             "||x||                 =  " << _xnrm << "\n" <<
             "||r||/||A||           =  " << _rnrm << "\n" <<
@@ -322,7 +326,8 @@ void Mumps::output_metrics(std::string file) {
 
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
+        myfile << ta << "\t" << tf << "\t" << ts << "\t" <<
+            _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
             "\t" << _id.RINFOG(6) << "\t" << _id.RINFOG(7) << "\t" << 
             _id.RINFOG(8) << "\t" << _id.RINFOG(9) << "\t" << _id.RINFOG(1) << 
             "\t" << _id.RINFOG(2) << "\t" << _id.RINFOG(3) << "\t" << 

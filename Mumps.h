@@ -79,7 +79,8 @@ public:
     void problem_spec_metrics_output();
     virtual void finalize() override;
     virtual void output_metrics_init(std::string file) override;
-    virtual void output_metrics(std::string sol_spec_file) override;
+    virtual void output_metrics(std::string sol_spec_file, long long ta = 0, 
+        long long tf = 0, long long ts = 0) override;
 };
 
 #endif /* MUMPS_H */

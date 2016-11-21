@@ -63,7 +63,8 @@ public:
     virtual void finalize_solve() = 0;
     virtual void finalize() = 0;
     virtual void output_metrics_init(std::string file) = 0;
-    virtual void output_metrics(std::string sol_spec_file) = 0;
+    virtual void output_metrics(std::string sol_spec_file, long long ta = 0, 
+        long long tf = 0, long long ts = 0) = 0;
 };
 
 #endif /* SOLVER_H */
