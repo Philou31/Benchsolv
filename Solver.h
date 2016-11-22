@@ -51,6 +51,7 @@ public:
     virtual void display_b() = 0;
     virtual void display_r() = 0;
     virtual void init() = 0;
+    virtual long long total_time(long long *t) = 0;
     virtual void analyse() = 0;
     virtual void factorize() = 0;
     virtual void alloc_solve_residual() = 0;

@@ -115,6 +115,10 @@ void QR_Mumps::init() {
     if (_opt_key.compare(cst::EMPTY_STRING_OPT_KEY)) set_opt(_opt_key, _opt_value);
 }
 
+long long QR_Mumps::total_time(long long *t) {
+    return *t;
+}
+
 void QR_Mumps::analyse() {
     dqrm_analyse_c(&_qrm_mat, _transp);
 }
@@ -188,8 +192,8 @@ void QR_Mumps::finalize() {
 void QR_Mumps::output_metrics_init(std::string file) {
     std::ofstream myfile;
     myfile.open(file.c_str(), std::ofstream::app);
-    myfile << "ta\ttf\tts\tta_tot\ttf_tot\tts_tot\ttest_id\txnrm\trnrm\tonrm\t"
-        "non0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
+    myfile << "test_id\tfile_A\tsolver\t#procs\tta\ttf\tts\tta_tot\ttf_tot\tts_tot"
+        "\txnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
         "facto_flops\te_mempeak\n";
     myfile.close();
 }
@@ -198,11 +202,11 @@ void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta,
         long long tf, long long ts, long long ta_tot, 
         long long tf_tot, long long ts_tot) {
     std::cout << "\ntime for analysis =  " << ta << "\n" <<
-        "time for facto    =  " << tf << "\n" <<
-        "time for solve    =  " << ts << "\n" <<
-        "time for analysis =  " << ts_tot << "\n" <<
-        "time for facto    =  " << tf_tot << "\n" <<
-        "time for solve    =  " << ts_tot << "\n" <<
+        "time for facto    =  " << cst::TIME_RATIO*tf << "\n" <<
+        "time for solve    =  " << cst::TIME_RATIO*ts << "\n" <<
+        "time for analysis =  " << cst::TIME_RATIO*ts_tot << "\n" <<
+        "time for facto    =  " << cst::TIME_RATIO*tf_tot << "\n" <<
+        "time for solve    =  " << cst::TIME_RATIO*ts_tot << "\n" <<
         "||A||             =  " << _anrm << "\n" <<
         "||b||             =  " << _bnrm << "\n" <<
         "||x||             =  " << _xnrm << "\n" <<
@@ -218,8 +222,11 @@ void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta,
     
     std::ofstream myfile;
     myfile.open(sol_spec_file.c_str(), std::ofstream::app);
-    myfile << ta << "\t" << tf << "\t" << ts << "\t" <<
-        _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
+    myfile << _test_id << "\t" << _file_A << "\tqr_mumps\t" << 1 << "\t" << 
+        cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
+        cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
+        cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << "\t" <<        
+        _xnrm << "\t" << _rnrm << "\t" << _onrm << 
         "\t" << _qrm_mat.gstats[qrm_nnz_r_] << "\t" << 
         _qrm_mat.gstats[qrm_nnz_h_] << "\t" << 
         _qrm_mat.gstats[qrm_e_nnz_r_] << "\t" << 

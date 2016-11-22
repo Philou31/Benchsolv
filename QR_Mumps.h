@@ -52,6 +52,7 @@ public:
     virtual void display_b() override;
     virtual void display_r() override;
     virtual void init() override;
+    virtual long long total_time(long long *t) override;
     virtual void analyse() override;
     virtual void factorize() override;
     virtual void alloc_solve_residual() override;

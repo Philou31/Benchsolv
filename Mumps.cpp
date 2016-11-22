@@ -151,6 +151,16 @@ void Mumps::init() {
             std::cout << "Benchmark option to test:\n";
         set_opt(_opt_key, _opt_value);
     }
+    
+    //Test ID
+    if (is_host())
+        std::clog << "TEST ID: " << _test_id << "\n";
+}
+
+long long Mumps::total_time(long long *t) {
+    long long t_tot = 0;
+    MPI_Reduce(t, &t_tot, 1, MPI_LONG_LONG, MPI_SUM, cst::HOST_ID, _mpi_comm);
+    return t_tot;
 }
 
 void Mumps::analyse() {
@@ -272,8 +282,8 @@ void Mumps::problem_spec_metrics_output() {
         std::ofstream ofstr;
         ofstr.open(_pb_spec_file.c_str(), std::ofstream::app);
         if (empty_file)
-            ofstr << "file_A\tanrm\tm\tn\tnz\tsymetry\tcond1\tcond2\tfile_b\tbnrm\n";
-        ofstr << _file_A << "\t" << _anrm << "\t" << _id.n << "\t" << _id.n << 
+            ofstr << "test_id\tfile_A\tanrm\tm\tn\tnz\tsymetry\tcond1\tcond2\tfile_b\tbnrm\n";
+        ofstr << _test_id << "\t" << _file_A << "\t" << _anrm << "\t" << _id.n << "\t" << _id.n << 
             "\t" << _id.nz << "\t" << _id.INFOG(8) << "\t" << _id.RINFOG(10) << 
             "\t" << _id.RINFOG(11) << "\t" << _file_b << "\t" << _bnrm << "\n";
         ofstr.close();
@@ -292,8 +302,8 @@ void Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "ta\ttf\tts\tta_tot\ttf_tot\tts_tot\ttest_id\txnrm\trnrm\t"
-            "onrm\tSR\tSR1\tSR2\tup_rnrm\t"
+        myfile << "test_id\tfile_A\tsolver\t#procs\tta\ttf\tts\tta_tot\ttf_tot\tts_tot"
+            "\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
             "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
             "tiny_piv\tnull_piv\titer_ref\te_max_front_size\t#nodes\t"
             "order_largest_front\t#factors_entries\n";
@@ -305,12 +315,13 @@ void Mumps::output_metrics(std::string file, long long ta,
         long long tf, long long ts, long long ta_tot, 
         long long tf_tot, long long ts_tot) {
     if (is_host()) {
-        std::cout << "\ntime for analysis     =  " << ta << "\n" <<
-            "time for facto        =  " << tf << "\n" <<
-            "time for solve        =  " << ts << "\n" <<
-            "tot time for analysis =  " << ta_tot << "\n" <<
-            "tot time for facto    =  " << tf_tot << "\n" <<
-            "tot time for solve    =  " << ts_tot << "\n" <<
+        std::cout << "\n#procs     =  " << _nb_procs << "\n" <<
+            "time for analysis     =  " << cst::TIME_RATIO*ta << "\n" <<
+            "time for facto        =  " << cst::TIME_RATIO*tf << "\n" <<
+            "time for solve        =  " << cst::TIME_RATIO*ts << "\n" <<
+            "tot time for analysis =  " << cst::TIME_RATIO*ta_tot << "\n" <<
+            "tot time for facto    =  " << cst::TIME_RATIO*tf_tot << "\n" <<
+            "tot time for solve    =  " << cst::TIME_RATIO*ts_tot << "\n" <<
             "||A||                 =  " << _anrm << "\n" <<
             "||b||                 =  " << _bnrm << "\n" <<
             "||x||                 =  " << _xnrm << "\n" <<
@@ -336,9 +347,11 @@ void Mumps::output_metrics(std::string file, long long ta,
 
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << ta << "\t" << tf << "\t" << ts << "\t" <<
-            ta_tot << "\t" << tf_tot << "\t" << ts_tot << "\t" <<
-            _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
+        myfile << _test_id << "\t" << _file_A << "\tmumps\t" << 1 << "\t" << 
+        cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
+        cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
+        cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << 
+            "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
             "\t" << _id.RINFOG(6) << "\t" << _id.RINFOG(7) << "\t" << 
             _id.RINFOG(8) << "\t" << _id.RINFOG(9) << "\t" << _id.RINFOG(1) << 
             "\t" << _id.RINFOG(2) << "\t" << _id.RINFOG(3) << "\t" << 

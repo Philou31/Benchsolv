@@ -20,6 +20,7 @@ namespace cst
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
     const std::string EMPTY_ID = "01234567";
+    const std::string RUN_COUNT = "run.count";
  
     //MPI
     const int USE_COMM_WORLD = -987654;
@@ -91,6 +92,7 @@ namespace cst
     //MATHS
     const double ABS_EPSILON = 1e-12;
     const double REL_EPSILON = 1e-8;
+    const double TIME_RATIO = 1e-6;
 }
 
 #endif /* CONSTANTS_H */

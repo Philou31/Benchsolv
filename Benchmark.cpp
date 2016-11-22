@@ -143,7 +143,8 @@ bool Benchmark<S,K,V>::iterate_solver(std::string file, bool a,
     bool iterated = false;
     parse_options(file);
     while (iterate_options()) {
-        std::clog << "\nNEW TEST WITH KEY: " << _current_key << ", VALUE: " 
+        if (_solver->is_host())
+            std::clog << "\nNEW TEST WITH KEY: " << _current_key << ", VALUE: " 
                 << _current_value << "\n";
         call(a, f, s, o);
         iterated = true;
@@ -161,7 +162,7 @@ void Benchmark<S,K,V>::analysis() {
     _solver->analyse();
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     _ta = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    _ta_tot += _ta;
+    _ta_tot = _solver->total_time(&_ta);
     if (_solver->is_host()) {
         std::cout << "Time to do the analysis            : " << _ta << "\n";
         std::cout << "Total time to do the analysis      : " << _ta_tot << "\n";
@@ -176,7 +177,7 @@ void Benchmark<S,K,V>::factorize() {
      _solver->factorize();
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     _tf = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    _tf_tot += _tf;
+    _tf_tot = _solver->total_time(&_tf);
     if (_solver->is_host()) {
         std::cout << "Time to do the facto               : " << _tf << "\n";
         std::cout << "Total time to do the facto         : " << _tf_tot << "\n";
@@ -191,7 +192,7 @@ void Benchmark<S,K,V>::solve() {
     _solver->solve();
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     _ts = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    _ts_tot += _ts;
+    _ts_tot = _solver->total_time(&_ts);
     if (_solver->is_host()) {
         std::cout << "Time to do the solve               : " << _ts << "\n";
         std::cout << "Total time to do the solve         : " << _ts_tot << "\n";
@@ -201,7 +202,8 @@ void Benchmark<S,K,V>::solve() {
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::output_metrics() {
     _solver->metrics();
-    _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts);
+    _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, _ta_tot, _tf_tot, 
+        _ts_tot);
 }
     
 template <class S, typename K, typename V>

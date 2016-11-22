@@ -92,6 +92,7 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
         ++iii;
         std::getline(infile, strInput);
     }
+    infile.close();
 }
 
 void Solver::display_ass(double values[], int n, std::vector<int*> indexes) {
