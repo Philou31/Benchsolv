@@ -48,14 +48,85 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////
     // DEBUGGING ARGUMENTS
     ////////////////////////////////////////////////////
+//    //Matrix A
+//    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
+//            cst::A_MHD_10_FILE);
+//    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
+//            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+//    //Matrix B
+//    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
+//            false, cst::RHS_MHD_10_FILE);
+//    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
+//            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+//    //Mumps
+//    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
+//            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_DISTR_ANALYSIS,
+//            parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
+//    a.add<std::string>("A_loc", '&', "Are getting the matrix A locally or on master",
+//            false, cst::FALSE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+//    a.add<int>("A_format", '_', "Format of the matrix A",
+//            false, parm::A_ASSEMBLED_FORMAT, cmdline::oneof<int>(parm::A_ASSEMBLED_FORMAT,
+//            parm::A_ELEMENTAL_FORMAT));
+//    a.add<int>("A_symmetry", 'y', "Symmetry of the matrix A",
+//            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
+//            parm::SYM_GENERAL, parm::SYM_DEFPOS));
+//    a.add<int>("working_host", 'w', "The host is working or not",
+//            false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
+//            parm::NOT_WORKING_HOST));
+//    //Benchmark
+//    ////Solver
+//    a.add<std::string>(cst::SOLVER, cst::SOLVER_C, "Type of solver  for the test", false,
+//            cst::MUMPS, cmdline::oneof<std::string>(cst::MUMPS, cst::QR_MUMPS, cst::MUMPS_C, 
+//            cst::QR_MUMPS_C));
+//    ////Test type
+//    a.add<std::string>(cst::MULTIPLE_BENCH, cst::MULTIPLE_BENCH_C, "Run multiple benchmarks or just options from analysis file",
+//            false, cst::OPTION, 
+//            cmdline::oneof<std::string>(cst::MULTIPLE, cst::SINGLE, cst::OPTION));
+//    ////Option test
+//    a.add<std::string>("string_opt_key", '(', "String key of the option to change (qr_mumps)",
+//            false, cst::EMPTY_STRING_OPT_KEY);
+//    a.add<int>("int_opt_key", ')', "Integer key of the option to change (mumps)",
+//            false, cst::EMPTY_INT_OPT_KEY);
+//    a.add<int>("int_opt_value", '-', "Integer value of the option to change (mumps/qr_mumps)",
+//            false, cst::EMPTY_INT_OPT_VALUE);
+//    ////Single test
+//    a.add<std::string>("bench_opt", '!', "File containing the options to test in single benchmark",
+//            false, "options/run.params");
+//    ////Multiple tests (output, analysis, factorization, solve)
+//    a.add<std::string>("output", 't', "File containing the options to test for output",
+//            false, "options/mumps/output.opt");
+//    a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
+//            false, "options/mumps/analysis.opt");
+//    a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
+//            false, "options/mumps/factorization.opt");
+//    a.add<std::string>("solve", 'p', "File containing the options to test in solve",
+//            false, "options/mumps/solve.opt");
+//    //Output
+//    ////Output files
+//    a.add<std::string>("fortran_output", 'm', "File where all fortran outputs will go",
+//            false, "res/fortran");
+//    a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
+//            false, "res/out");
+//    a.add<std::string>("error_file", 'e', "File where all error outputs will go",
+//            false, "res/err");
+//    ////Metrics files
+//    a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
+//            false, "res/sol_spec.txt");
+//    a.add<std::string>("pb_spec_metrics", 'k', "File where all the problem specific metrics will go",
+//            false, "res/pb_spec.txt");
+    
+    
+    ////////////////////////////////////////////////////
+    // PRODUCTION ARGUMENTS
+    ////////////////////////////////////////////////////
     //Matrix A
-    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
+    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", true,
             cst::A_MHD_10_FILE);
     a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Matrix B
     a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-            false, cst::RHS_MHD_10_FILE);
+            true, cst::RHS_MHD_10_FILE);
     a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Mumps
@@ -75,7 +146,7 @@ int main(int argc, char **argv) {
             parm::NOT_WORKING_HOST));
     //Benchmark
     ////Solver
-    a.add<std::string>(cst::SOLVER, cst::SOLVER_C, "Type of solver  for the test", false,
+    a.add<std::string>(cst::SOLVER, cst::SOLVER_C, "Type of solver  for the test", true,
             cst::MUMPS, cmdline::oneof<std::string>(cst::MUMPS, cst::QR_MUMPS, cst::MUMPS_C, 
             cst::QR_MUMPS_C));
     ////Test type
@@ -94,13 +165,13 @@ int main(int argc, char **argv) {
             false, "options/run.params");
     ////Multiple tests (output, analysis, factorization, solve)
     a.add<std::string>("output", 't', "File containing the options to test for output",
-            false, "options/mumps/output.opt");
+            false, cst::EMPTY_FILE);
     a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
-            false, "options/mumps/analysis.opt");
+            false, cst::EMPTY_FILE);
     a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
-            false, "options/mumps/factorization.opt");
+            false, cst::EMPTY_FILE);
     a.add<std::string>("solve", 'p', "File containing the options to test in solve",
-            false, "options/mumps/solve.opt");
+            false, cst::EMPTY_FILE);
     //Output
     ////Output files
     a.add<std::string>("fortran_output", 'm', "File where all fortran outputs will go",
@@ -114,50 +185,6 @@ int main(int argc, char **argv) {
             false, "res/sol_spec.txt");
     a.add<std::string>("pb_spec_metrics", 'k', "File where all the problem specific metrics will go",
             false, "res/pb_spec.txt");
-    
-    
-    ////////////////////////////////////////////////////
-    // PRODUCTION ARGUMENTS
-    ////////////////////////////////////////////////////
-//    a.add<std::string>("solver", 's', "Type of solver  for the test", true,
-//            "mumps", cmdline::oneof<std::string>("mumps", "qr_mumps", "m", 
-//            "qrm"));
-//    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", true,
-//            cst::A_MHD_10_FILE);
-//    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
-//            true, "true", cmdline::oneof<std::string>("true", "false"));
-//    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-//            true, cst::RHS_MHD_10_FILE);
-//    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
-//            true, "true", cmdline::oneof<std::string>("true", "false"));
-//    a.add<int>("symmetry", 'y', "Symmetry of the matrix A",
-//            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
-//            parm::SYM_GENERAL, parm::SYM_DEFPOS));
-//    a.add<int>("working_host", 'w', "The host is working or not",
-//            false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
-//            parm::NOT_WORKING_HOST));
-//    a.add<std::string>("multiple_bench", 'q', "Run multiple benchmarks or just options from analysis file",
-//            false, "false", cmdline::oneof<std::string>("true", "false"));
-//    a.add<std::string>("bench_opt", '!', "File containing the options to test in single benchmark",
-//            false, "options/benchmark.opt");
-//    a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
-//            false, "options/mumps/analysis.opt");
-//    a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",
-//            false, cst::EMPTY_FILE);
-//    a.add<std::string>("output", 't', "File containing the options to test for output",
-//            false, cst::EMPTY_FILE);
-//    a.add<std::string>("solve", 'p', "File containing the options to test in solve",
-//            false, cst::EMPTY_FILE);
-//    a.add<std::string>("mumps_output", 'm', "File where all mumps outputs will go",
-//            false, "mumps.txt");
-//    a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
-//            false, "res/out.txt");
-//    a.add<std::string>("error_file", 'e', "File where all error outputs will go",
-//            false, "res/err.txt");
-//    a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
-//            false, "res/sol_spec.txt");
-//    a.add<std::string>("pb_spec_metrics", 'k', "File where all the problem specific metrics will go",
-//            false, "res/pb_spec.txt");
 
     // Run parser.
     // It returns only if command line arguments are valid.

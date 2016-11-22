@@ -294,7 +294,8 @@ void Mumps::output_metrics_init(std::string file) {
         myfile.open(file.c_str(), std::ofstream::app);
         myfile << "ta\ttf\ts\ttest_id\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
             "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
-            "tiny_piv\tnull_piv\titer_ref\n";
+            "tiny_piv\tnull_piv\titer_ref\te_max_front_size\t#nodes\t"
+            "order_largest_front\t#factors_entries\n";
         myfile.close();
     }
 }
@@ -322,6 +323,10 @@ void Mumps::output_metrics(std::string file, long long ta,
             "tiny pivots           = " << _id.INFOG(25) << "\n" <<
             "null pivots           = " << _id.INFOG(28) << "\n" <<
             "iterative refinement  = " << _id.INFOG(15) << "\n" <<
+            "est. max front size   = " << _id.INFOG(5) << "\n" <<
+            "#nodes in elim tree = " << _id.INFOG(6) << "\n" <<
+            "order largest frontal = " << _id.INFOG(11) << "\n" <<
+            "#factors entries    = " << _id.INFOG(29) << "\n" <<
             "\n";
 
         std::ofstream myfile;
@@ -332,7 +337,9 @@ void Mumps::output_metrics(std::string file, long long ta,
             _id.RINFOG(8) << "\t" << _id.RINFOG(9) << "\t" << _id.RINFOG(1) << 
             "\t" << _id.RINFOG(2) << "\t" << _id.RINFOG(3) << "\t" << 
             _id.INFOG(12) << "\t" << _id.INFOG(13) << "\t" << _id.INFOG(25) << 
-            "\t" << _id.INFOG(28) << "\t" << _id.INFOG(15) << "\n";
+            "\t" << _id.INFOG(28) << "\t" << _id.INFOG(15) << "\t" << 
+            _id.INFOG(5) << "\t" << _id.INFOG(6) << "\t" << _id.INFOG(11) <<
+            "\t" << _id.INFOG(29) << "\n";
         myfile.close();
     }
 }
