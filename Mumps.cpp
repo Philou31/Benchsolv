@@ -292,7 +292,8 @@ void Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "ta\ttf\ts\ttest_id\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
+        myfile << "ta\ttf\tts\tta_tot\ttf_tot\tts_tot\ttest_id\txnrm\trnrm\t"
+            "onrm\tSR\tSR1\tSR2\tup_rnrm\t"
             "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
             "tiny_piv\tnull_piv\titer_ref\te_max_front_size\t#nodes\t"
             "order_largest_front\t#factors_entries\n";
@@ -301,11 +302,15 @@ void Mumps::output_metrics_init(std::string file) {
 }
 
 void Mumps::output_metrics(std::string file, long long ta, 
-        long long tf, long long ts) {
+        long long tf, long long ts, long long ta_tot, 
+        long long tf_tot, long long ts_tot) {
     if (is_host()) {
         std::cout << "\ntime for analysis     =  " << ta << "\n" <<
-            "time for facto        =  " << ta << "\n" <<
-            "time for solve        =  " << ta << "\n" <<
+            "time for facto        =  " << tf << "\n" <<
+            "time for solve        =  " << ts << "\n" <<
+            "tot time for analysis =  " << ta_tot << "\n" <<
+            "tot time for facto    =  " << tf_tot << "\n" <<
+            "tot time for solve    =  " << ts_tot << "\n" <<
             "||A||                 =  " << _anrm << "\n" <<
             "||b||                 =  " << _bnrm << "\n" <<
             "||x||                 =  " << _xnrm << "\n" <<
@@ -332,6 +337,7 @@ void Mumps::output_metrics(std::string file, long long ta,
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
         myfile << ta << "\t" << tf << "\t" << ts << "\t" <<
+            ta_tot << "\t" << tf_tot << "\t" << ts_tot << "\t" <<
             _test_id << "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
             "\t" << _id.RINFOG(6) << "\t" << _id.RINFOG(7) << "\t" << 
             _id.RINFOG(8) << "\t" << _id.RINFOG(9) << "\t" << _id.RINFOG(1) << 

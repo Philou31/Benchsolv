@@ -26,7 +26,7 @@ QR_Mumps::~QR_Mumps() {
 }
 
 bool QR_Mumps::is_host() {
-    std::cout << "No MPI on QR_Mumps.\n";
+//    std::cout << "No MPI on QR_Mumps.\n";
     return true;
 }
 
@@ -188,17 +188,21 @@ void QR_Mumps::finalize() {
 void QR_Mumps::output_metrics_init(std::string file) {
     std::ofstream myfile;
     myfile.open(file.c_str(), std::ofstream::app);
-    myfile << "ta\ttf\ts\ttest_id\txnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
+    myfile << "ta\ttf\tts\tta_tot\ttf_tot\tts_tot\ttest_id\txnrm\trnrm\tonrm\t"
+        "non0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
         "facto_flops\te_mempeak\n";
     myfile.close();
 }
 
 void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta, 
-        long long tf, long long ts) {
-    std::cout << 
-        "\ntime for analysis =  " << ta << "\n" <<
-        "time for facto    =  " << ta << "\n" <<
-        "time for solve    =  " << ta << "\n" <<
+        long long tf, long long ts, long long ta_tot, 
+        long long tf_tot, long long ts_tot) {
+    std::cout << "\ntime for analysis =  " << ta << "\n" <<
+        "time for facto    =  " << tf << "\n" <<
+        "time for solve    =  " << ts << "\n" <<
+        "time for analysis =  " << ts_tot << "\n" <<
+        "time for facto    =  " << tf_tot << "\n" <<
+        "time for solve    =  " << ts_tot << "\n" <<
         "||A||             =  " << _anrm << "\n" <<
         "||b||             =  " << _bnrm << "\n" <<
         "||x||             =  " << _xnrm << "\n" <<

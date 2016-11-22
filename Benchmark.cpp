@@ -155,32 +155,47 @@ bool Benchmark<S,K,V>::iterate_solver(std::string file, bool a,
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::analysis() {
     // Analysis
-    std::cout << "\nStarting the analysis\n";
+    if (_solver->is_host())
+	    std::cout << "\nStarting the analysis\n";
     auto start = std::chrono::high_resolution_clock::now();
     _solver->analyse();
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     _ta = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    std::cout << "Time to do the analysis      : " << _ta << "\n";
+    _ta_tot += _ta;
+    if (_solver->is_host()) {
+        std::cout << "Time to do the analysis            : " << _ta << "\n";
+        std::cout << "Total time to do the analysis      : " << _ta_tot << "\n";
+    }
 }
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::factorize() {
-    std::cout << "Starting the factorization\n";
+    if (_solver->is_host())
+        std::cout << "Starting the factorization\n";
     auto start = std::chrono::high_resolution_clock::now();
-    _solver->factorize();
+     _solver->factorize();
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     _tf = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    std::cout << "Time to do the factorization : " << _tf << "\n";
+    _tf_tot += _tf;
+    if (_solver->is_host()) {
+        std::cout << "Time to do the facto               : " << _tf << "\n";
+        std::cout << "Total time to do the facto         : " << _tf_tot << "\n";
+    }
 }
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::solve() {
-    printf("Starting the solve\n");
+    if (_solver->is_host())
+        printf("Starting the solve\n");
     auto start = std::chrono::high_resolution_clock::now();
     _solver->solve();
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     _ts = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    std::cout << "Time to do the solve         : " << _ts << "\n";
+    _ts_tot += _ts;
+    if (_solver->is_host()) {
+        std::cout << "Time to do the solve               : " << _ts << "\n";
+        std::cout << "Total time to do the solve         : " << _ts_tot << "\n";
+    }
 }
     
 template <class S, typename K, typename V>

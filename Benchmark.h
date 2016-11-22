@@ -34,6 +34,7 @@ private:
     V _current_value;
     int _nb_tests = 0;
     long long _ta = 0, _tf = 0, _ts = 0;
+    long long _ta_tot = 0, _tf_tot = 0, _ts_tot = 0;
 public:
     Benchmark() {}
     Benchmark(S *solver, std::string b_file, std::string o_file, 
