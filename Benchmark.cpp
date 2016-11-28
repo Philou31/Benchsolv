@@ -164,8 +164,8 @@ void Benchmark<S,K,V>::analysis() {
     _ta = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     _ta_tot = _solver->total_time(&_ta);
     if (_solver->is_host()) {
-        std::cout << "Time to do the analysis            : " << _ta << "\n";
-        std::cout << "Total time to do the analysis      : " << _ta_tot << "\n";
+        std::cout << "Time to do the analysis            : " << cst::TIME_RATIO*_ta << "\n";
+        std::cout << "Total time to do the analysis      : " << cst::TIME_RATIO*_ta_tot << "\n";
     }
 }
     
@@ -179,8 +179,8 @@ void Benchmark<S,K,V>::factorize() {
     _tf = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     _tf_tot = _solver->total_time(&_tf);
     if (_solver->is_host()) {
-        std::cout << "Time to do the facto               : " << _tf << "\n";
-        std::cout << "Total time to do the facto         : " << _tf_tot << "\n";
+        std::cout << "Time to do the facto               : " << cst::TIME_RATIO*_tf << "\n";
+        std::cout << "Total time to do the facto         : " << cst::TIME_RATIO*_tf_tot << "\n";
     }
 }
     
@@ -194,16 +194,33 @@ void Benchmark<S,K,V>::solve() {
     _ts = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     _ts_tot = _solver->total_time(&_ts);
     if (_solver->is_host()) {
-        std::cout << "Time to do the solve               : " << _ts << "\n";
-        std::cout << "Total time to do the solve         : " << _ts_tot << "\n";
+        std::cout << "Time to do the solve               : " << cst::TIME_RATIO*_ts << "\n";
+        std::cout << "Total time to do the solve         : " << cst::TIME_RATIO*_ts_tot << "\n";
     }
 }
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::output_metrics() {
+    long long t;
+    if (_solver->is_host())
+        printf("Starting the Metrics\n");
+    auto start = std::chrono::high_resolution_clock::now();
     _solver->metrics();
     _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, _ta_tot, _tf_tot, 
         _ts_tot);
+    auto elapsed = std::chrono::high_resolution_clock::now() - start;
+    t = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+    if (_solver->is_host())
+        std::cout << "Time to do the metrics               : " << cst::TIME_RATIO*t << "\n";
+}
+    
+template <class S, typename K, typename V>
+bool Benchmark<S,K,V>::get_b_again(bool todo, bool got_b, bool before_facto) {
+    if (todo && !got_b && _solver->get_b_before_facto()) {
+        _solver->get_b();
+        return true;
+    }
+    return false;
 }
     
 template <class S, typename K, typename V>
@@ -212,23 +229,15 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
 //    _solver->display_A(10);
 //    std::cout << "b:\n";
 //    _solver->display_b(10);
+    bool got_b = false;
     try {
-        bool got_b = false;
         if (a) analysis();
-        if (f) {
-            if (!got_b && _solver->get_b_before_facto()) {
-                _solver->get_b();
-                got_b = true;
-            }
+        got_b = get_b_again(f, !got_b, _solver->get_b_before_facto());
+        if (f)
             factorize();
-        }
-        if (s) {
-            if (!got_b && !_solver->get_b_before_facto()) {
-                _solver->get_b();
-                got_b = true;
-            }
+        got_b = get_b_again(s, !got_b, !_solver->get_b_before_facto());
+        if (s)
             solve();
-        }
         if (o) output_metrics();
     } catch(...) {
         std::cerr << "Error On This Test.\n";

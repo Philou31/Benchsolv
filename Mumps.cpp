@@ -77,9 +77,10 @@ void Mumps::get_A() {
 }
 
 void Mumps::get_b() {
-    if (is_host())
+    if (is_host()) {
         get_MM(_file_b, _id.n, _id.n, _id.nz, &_id.rhs, {}, _n_present_b, true);
         alloc_solve_residual();
+    }
 }
 
 void Mumps::display_A(int n) {
@@ -125,10 +126,15 @@ void Mumps::mumps(int job) {
 }
 
 void Mumps::init() {
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int namelen = 0;
     int ierr = MPI_Init (NULL, NULL);
     ierr = MPI_Comm_size(_mpi_comm, &_nb_procs);
     ierr = MPI_Comm_rank(_mpi_comm, &_proc_id);
-    std::cout << "MPI initialization in Mumps, error code: " << ierr << "\n\n";
+    ierr = MPI_Get_processor_name(processor_name, &namelen);
+    std::clog << "MPI initialization in Mumps, error code: " << ierr << "\n";
+    std::clog << "Running on CPU " << sched_getcpu() << " on node " << processor_name << "\n";
+    std::clog << "Proc id " << _proc_id << " on a total of " << _nb_procs << " procs\n\n";
     mumps(parm::JOB_INIT);
     
     if (is_host()) {

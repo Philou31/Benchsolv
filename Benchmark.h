@@ -52,6 +52,7 @@ public:
     void factorize();
     void solve();
     void output_metrics();
+    bool get_b_again(bool todo, bool got_b, bool before_facto);
     void call(bool a=true, bool f=true, bool s=true, bool o=true);
     void benchmark(std::string multiple_bench);
     void single_benchmark();
