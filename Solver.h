@@ -67,6 +67,36 @@ public:
     virtual void output_metrics(std::string sol_spec_file, long long ta = 0, 
         long long tf = 0, long long ts = 0, long long ta_tot = 0, 
         long long tf_tot = 0, long long ts_tot = 0) = 0;
+//    
+//    template <typename T>
+//    void Solver::out(std::ostream str, T t) 
+//    {
+//        str << t << "\n";
+//    }
+//    template<typename T, typename... Args>
+//    void Solver::out(std::ostream str, T t, Args... args) // recursive variadic function
+//    {
+//        str << t << "\n";
+//        out(args...) ;
+//    }
+//    template<typename... Args>
+//    void Solver::to_clog(Args... args) // recursive variadic function
+//    {
+//        if (is_host())
+//            out(std::clog, args...);
+//    }
+//    template<typename... Args>
+//    void Solver::to_cout(Args... args) // recursive variadic function
+//    {
+//        if (is_host())
+//            out(std::cout, args...);
+//    }
+//    template<typename... Args>
+//    void Solver::to_cerr(Args... args) // recursive variadic function
+//    {
+//        if (is_host())
+//            out(std::cerr, args...);
+//    }
 };
 
 #endif /* SOLVER_H */

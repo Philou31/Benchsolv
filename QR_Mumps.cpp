@@ -61,9 +61,13 @@ void QR_Mumps::get_A() {
 }
 
 void QR_Mumps::get_b() {
-    get_MM(_file_b, _qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_b, {}, _n_present_b,
-        true);
-    alloc_solve_residual();
+    if (is_host()) {
+        if (_file_b.compare(cst::EMPTY_FILE)) {
+            get_MM(_file_b, _qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_b, {}, _n_present_b,
+                true);
+        } else alloc_rhs();
+        alloc_solve_residual();
+    }
 }
 
 void QR_Mumps::display_A(int n) {
@@ -135,9 +139,11 @@ void QR_Mumps::alloc_solve_residual() {
 }
 
 void QR_Mumps::alloc_rhs() {
-    _b = new double[_qrm_mat.m];
-    int i;
-    for(i = 0; i < _qrm_mat.m; i++) _b[i] = (double)1.0;
+    if (is_host()) {
+        _b = new double[_qrm_mat.m];
+        int i;
+        for(i = 0; i < _qrm_mat.m; i++) _b[i] = (double)1.0;
+    }
 }
 
 void QR_Mumps::solve() {
@@ -190,48 +196,52 @@ void QR_Mumps::finalize() {
 }
 
 void QR_Mumps::output_metrics_init(std::string file) {
-    std::ofstream myfile;
-    myfile.open(file.c_str(), std::ofstream::app);
-    myfile << "test_id\tfile_A\tsolver\t#procs\tta\ttf\tts\tta_tot\ttf_tot\tts_tot"
-        "\txnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
-        "facto_flops\te_mempeak\n";
-    myfile.close();
+    if (is_host()) {
+        std::ofstream myfile;
+        myfile.open(file.c_str(), std::ofstream::app);
+        myfile << "test_id\tfile_A\tsolver\t#procs\tta\ttf\tts\tta_tot\ttf_tot\tts_tot"
+            "\txnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
+             "facto_flops\te_mempeak\n";
+        myfile.close();
+    }
 }
-
+    
 void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta, 
         long long tf, long long ts, long long ta_tot, 
         long long tf_tot, long long ts_tot) {
-    std::cout << "\ntime for analysis =  " << ta << "\n" <<
-        "time for facto    =  " << cst::TIME_RATIO*tf << "\n" <<
-        "time for solve    =  " << cst::TIME_RATIO*ts << "\n" <<
-        "time for analysis =  " << cst::TIME_RATIO*ts_tot << "\n" <<
-        "time for facto    =  " << cst::TIME_RATIO*tf_tot << "\n" <<
-        "time for solve    =  " << cst::TIME_RATIO*ts_tot << "\n" <<
-        "||A||             =  " << _anrm << "\n" <<
-        "||b||             =  " << _bnrm << "\n" <<
-        "||x||             =  " << _xnrm << "\n" <<
-        "||r||/||A||       =  " << _rnrm << "\n" <<
-        "||A^tr||/||r||    =  " << _onrm << "\n" <<
-        "Nonzeros in R                 : " << _qrm_mat.gstats[qrm_nnz_r_] << "\n" <<
-        "Nonzeros in H                 : " << _qrm_mat.gstats[qrm_nnz_h_] << "\n" <<
-        "Estimated nonzeros in R       : " << _qrm_mat.gstats[qrm_e_nnz_r_] << "\n" <<
-        "Estimated nonzeros in H       : " << _qrm_mat.gstats[qrm_e_nnz_h_] << "\n" <<
-        "Total flops at facto          : " << _qrm_mat.gstats[qrm_e_facto_flops_] << "\n" <<
-        "Estimated Memory Peak at facto: " << _qrm_mat.gstats[qem_e_facto_mempeak_] << "\n" <<
-        "\n";
+    if (is_host()) {
+        std::cout << "\ntime for analysis =  " << ta << "\n" <<
+            "time for facto    =  " << cst::TIME_RATIO*tf << "\n" <<
+            "time for solve    =  " << cst::TIME_RATIO*ts << "\n" <<
+            "time for analysis =  " << cst::TIME_RATIO*ts_tot << "\n" <<
+            "time for facto    =  " << cst::TIME_RATIO*tf_tot << "\n" <<
+            "time for solve    =  " << cst::TIME_RATIO*ts_tot << "\n" <<
+            "||A||             =  " << _anrm << "\n" <<
+            "||b||             =  " << _bnrm << "\n" <<
+            "||x||             =  " << _xnrm << "\n" <<
+            "||r||/||A||       =  " << _rnrm << "\n" <<
+            "||A^tr||/||r||    =  " << _onrm << "\n" <<
+            "Nonzeros in R                 : " << _qrm_mat.gstats[qrm_nnz_r_] << "\n" <<
+            "Nonzeros in H                 : " << _qrm_mat.gstats[qrm_nnz_h_] << "\n" <<
+            "Estimated nonzeros in R       : " << _qrm_mat.gstats[qrm_e_nnz_r_] << "\n" <<
+            "Estimated nonzeros in H       : " << _qrm_mat.gstats[qrm_e_nnz_h_] << "\n" <<
+            "Total flops at facto          : " << _qrm_mat.gstats[qrm_e_facto_flops_] << "\n" <<
+            "Estimated Memory Peak at facto: " << _qrm_mat.gstats[qem_e_facto_mempeak_] << "\n" <<
+            "\n";
     
-    std::ofstream myfile;
-    myfile.open(sol_spec_file.c_str(), std::ofstream::app);
-    myfile << _test_id << "\t" << _file_A << "\tqr_mumps\t" << 1 << "\t" << 
-        cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
-        cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
-        cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << "\t" <<        
-        _xnrm << "\t" << _rnrm << "\t" << _onrm << 
-        "\t" << _qrm_mat.gstats[qrm_nnz_r_] << "\t" << 
-        _qrm_mat.gstats[qrm_nnz_h_] << "\t" << 
-        _qrm_mat.gstats[qrm_e_nnz_r_] << "\t" << 
-        _qrm_mat.gstats[qrm_e_nnz_h_] << "\t" << 
-        _qrm_mat.gstats[qrm_e_facto_flops_] << "\t" << 
-        _qrm_mat.gstats[qem_e_facto_mempeak_] << "\n";
-    myfile.close();
+        std::ofstream myfile;
+        myfile.open(sol_spec_file.c_str(), std::ofstream::app);
+        myfile << _test_id << "\t" << _file_A << "\tqr_mumps\t" << 1 << "\t" << 
+            cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
+            cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
+            cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << "\t" <<        
+            _xnrm << "\t" << _rnrm << "\t" << _onrm << 
+            "\t" << _qrm_mat.gstats[qrm_nnz_r_] << "\t" << 
+            _qrm_mat.gstats[qrm_nnz_h_] << "\t" << 
+            _qrm_mat.gstats[qrm_e_nnz_r_] << "\t" << 
+            _qrm_mat.gstats[qrm_e_nnz_h_] << "\t" << 
+            _qrm_mat.gstats[qrm_e_facto_flops_] << "\t" << 
+            _qrm_mat.gstats[qem_e_facto_mempeak_] << "\n";
+        myfile.close();
+    }
 }

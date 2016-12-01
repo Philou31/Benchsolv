@@ -49,6 +49,8 @@ int main(int argc, char **argv) {
 //    //Matrix B
 //    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
 //            false, cst::RHS_MHD_10_FILE);
+////    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
+////            false, cst::RHS_MHD_10_FILE);
 //    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
@@ -116,13 +118,13 @@ int main(int argc, char **argv) {
     // PRODUCTION ARGUMENTS
     ////////////////////////////////////////////////////
     //Matrix A
-    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", true,
-            cst::A_MHD_10_FILE);
+    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", 
+            true, cst::A_MHD_10_FILE);
     a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Matrix B
     a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-            true, cst::RHS_MHD_10_FILE);
+            true, cst::EMPTY_FILE);
     a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Mumps

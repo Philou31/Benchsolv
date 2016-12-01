@@ -42,7 +42,8 @@ bool Mumps::is_host() {
 }
 
 void Mumps::set_opt(int key, int value) {
-    std::cout << "Setting " << key << " to value " << value << "\n";
+    if (is_host())
+        std::cout << "Setting " << key << " to value " << value << "\n";
     _id.ICNTL(key) = value;
 }
 
@@ -78,8 +79,9 @@ void Mumps::get_A() {
 
 void Mumps::get_b() {
     if (is_host()) {
-        get_MM(_file_b, _id.n, _id.n, _id.nz, &_id.rhs, {}, _n_present_b, true);
-        alloc_solve_residual();
+        if (_file_b.compare(cst::EMPTY_FILE))
+            get_MM(_file_b, _id.n, _id.n, _id.nz, &_id.rhs, {}, _n_present_b, true);
+        else alloc_rhs();
     }
 }
 
@@ -186,8 +188,9 @@ void Mumps::alloc_solve_residual() {
 
 void Mumps::alloc_rhs() {
     if (is_host()) {
+        std::clog << "Allocating RHS to vector with all 1 of size " << _id.n << "\n";
         _id.rhs = new double[_id.n];
-        for(int i = 0; i < _id.n; i++) _id.rhs[i] = (double)1.0;
+        for(int i = 0; i < _id.n; i++) _id.rhs[i] = 1.0;
     }
 }
 
@@ -241,6 +244,7 @@ void Mumps::metrics() {
         assemble_A();
     }
     if (is_host()) {
+        alloc_solve_residual();
         _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
             _r, _id.rhs);
         _metrics.residual_norm(_rnrm);
@@ -353,7 +357,7 @@ void Mumps::output_metrics(std::string file, long long ta,
 
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << _test_id << "\t" << _file_A << "\tmumps\t" << 1 << "\t" << 
+        myfile << _test_id << "\t" << _file_A << "\tmumps\t" << _nb_procs << "\t" << 
         cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
         cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
         cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << 
