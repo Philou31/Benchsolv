@@ -33,8 +33,8 @@ namespace cst
     
     //Arguments
     const std::string EMPTY_STRING_OPT_KEY = "";
-    const int EMPTY_INT_OPT_KEY = -1;
-    const int EMPTY_INT_OPT_VALUE = -1;
+    const int EMPTY_INT_OPT_KEY = -42;
+    const int EMPTY_INT_OPT_VALUE = -42;
     //Solver
     const std::string SOLVER = "solver";
     const char SOLVER_C = 's';

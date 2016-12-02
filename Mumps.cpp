@@ -312,8 +312,8 @@ void Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "test_id\tfile_A\tsolver\t#procs\tta\ttf\tts\tta_tot\ttf_tot\tts_tot"
-            "\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
+        myfile << "test_id\tfile_A\tsolver\t#procs\toption\tvalue\tta\ttf\tts\t"
+            "ta_tot\ttf_tot\tts_tot\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
             "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
             "tiny_piv\tnull_piv\titer_ref\te_max_front_size\t#nodes\t"
             "order_largest_front\t#factors_entries\n";
@@ -323,9 +323,12 @@ void Mumps::output_metrics_init(std::string file) {
 
 void Mumps::output_metrics(std::string file, long long ta, 
         long long tf, long long ts, long long ta_tot, 
-        long long tf_tot, long long ts_tot) {
+        long long tf_tot, long long ts_tot, std::string key,
+        std::string value) {
     if (is_host()) {
         std::cout << "\n#procs     =  " << _nb_procs << "\n" <<
+            "current option        =  " << key << "\n" <<
+            "current value         =  " << value << "\n" <<
             "time for analysis     =  " << cst::TIME_RATIO*ta << "\n" <<
             "time for facto        =  " << cst::TIME_RATIO*tf << "\n" <<
             "time for solve        =  " << cst::TIME_RATIO*ts << "\n" <<
@@ -357,10 +360,11 @@ void Mumps::output_metrics(std::string file, long long ta,
 
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << _test_id << "\t" << _file_A << "\tmumps\t" << _nb_procs << "\t" << 
-        cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
-        cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
-        cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << 
+        myfile << _test_id << "\t" << _file_A << "\tmumps\t" << _nb_procs << 
+            "\t" << key << "\t" << value << "\t" <<
+            cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
+            cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
+            cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << 
             "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
             "\t" << _id.RINFOG(6) << "\t" << _id.RINFOG(7) << "\t" << 
             _id.RINFOG(8) << "\t" << _id.RINFOG(9) << "\t" << _id.RINFOG(1) << 

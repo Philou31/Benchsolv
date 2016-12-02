@@ -82,7 +82,8 @@ public:
     virtual void output_metrics_init(std::string file) override;
     virtual void output_metrics(std::string sol_spec_file, long long ta = 0, 
         long long tf = 0, long long ts = 0, long long ta_tot = 0, 
-        long long tf_tot = 0, long long ts_tot = 0) override;
+        long long tf_tot = 0, long long ts_tot = 0, std::string key = "",
+        std::string value = "") override;
 };
 
 #endif /* MUMPS_H */

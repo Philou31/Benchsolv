@@ -66,7 +66,8 @@ public:
     virtual void output_metrics_init(std::string file) = 0;
     virtual void output_metrics(std::string sol_spec_file, long long ta = 0, 
         long long tf = 0, long long ts = 0, long long ta_tot = 0, 
-        long long tf_tot = 0, long long ts_tot = 0) = 0;
+        long long tf_tot = 0, long long ts_tot = 0, std::string key = "",
+        std::string value = "") = 0;
 //    
 //    template <typename T>
 //    void Solver::out(std::ostream str, T t) 

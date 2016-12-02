@@ -108,6 +108,8 @@ void QR_Mumps::init() {
     
     //Default parameters
     //Global
+    if (is_host())
+        std::cout << "\nDefault options:\n";
     set_opt(parqrm::DUNIT.c_str(), 1);
     set_opt(parqrm::EUNIT.c_str(), 2);
     set_opt(parqrm::OUNIT.c_str(), 3);
@@ -116,7 +118,16 @@ void QR_Mumps::init() {
     set_opt(parqrm::KEEPH.c_str(), qrm_yes_);
     
     //Test Parameters
-    if (_opt_key.compare(cst::EMPTY_STRING_OPT_KEY)) set_opt(_opt_key, _opt_value);
+    if (_opt_key != cst::EMPTY_STRING_OPT_KEY && 
+            _opt_value != cst::EMPTY_INT_OPT_VALUE) {
+        if (is_host())
+            std::cout << "Benchmark option to test:\n";
+        set_opt(_opt_key, _opt_value);
+    }
+    
+    //Test ID
+    if (is_host())
+        std::clog << "TEST ID: " << _test_id << "\n";
 }
 
 long long QR_Mumps::total_time(long long *t) {
@@ -199,18 +210,21 @@ void QR_Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "test_id\tfile_A\tsolver\t#procs\tta\ttf\tts\tta_tot\ttf_tot\tts_tot"
-            "\txnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r\te_non0_h\t" <<
-             "facto_flops\te_mempeak\n";
+        myfile << "test_id\tfile_A\tsolver\t#procs\toption\tvalue\tta\ttf\tts\t"
+            "ta_tot\ttf_tot\tts_tot\txnrm\trnrm\tonrm\tnon0_r\tnon0_h\te_non0_r"
+            "\te_non0_h\tfacto_flops\te_mempeak\n";
         myfile.close();
     }
 }
     
 void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta, 
         long long tf, long long ts, long long ta_tot, 
-        long long tf_tot, long long ts_tot) {
+        long long tf_tot, long long ts_tot, std::string key,
+        std::string value) {
     if (is_host()) {
-        std::cout << "\ntime for analysis =  " << ta << "\n" <<
+        std::cout << "\ncurrent option    =  " << key << "\n" <<
+            "current value     =  " << value << "\n" <<
+            "time for analysis =  " << ta << "\n" <<
             "time for facto    =  " << cst::TIME_RATIO*tf << "\n" <<
             "time for solve    =  " << cst::TIME_RATIO*ts << "\n" <<
             "time for analysis =  " << cst::TIME_RATIO*ts_tot << "\n" <<
@@ -231,7 +245,8 @@ void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta,
     
         std::ofstream myfile;
         myfile.open(sol_spec_file.c_str(), std::ofstream::app);
-        myfile << _test_id << "\t" << _file_A << "\tqr_mumps\t" << 1 << "\t" << 
+        myfile << _test_id << "\t" << _file_A << "\tqr_mumps\t" << 1 << "\t" <<
+            key << "\t" << value << "\t" << 
             cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
             cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
             cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << "\t" <<        

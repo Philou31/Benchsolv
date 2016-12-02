@@ -26,6 +26,7 @@ template <class S, typename K, typename V>
 class Benchmark {
 private:
     S *_solver;
+    std::string _multiple_bench;
     std::string _b_file, _o_file, _a_file, _f_file, _s_file, _sol_spec_file;
     std::deque<K> _opts;
     std::deque<std::deque<V>> _opts_vals;
@@ -37,9 +38,9 @@ private:
     long long _ta_tot = 0, _tf_tot = 0, _ts_tot = 0;
 public:
     Benchmark() {}
-    Benchmark(S *solver, std::string b_file, std::string o_file, 
-        std::string a_file, std::string f_file, std::string s_file, 
-        std::string sol_spec_file);
+    Benchmark(S *solver, std::string multiple_bench,
+        std::string b_file, std::string o_file, std::string a_file,
+        std::string f_file, std::string s_file, std::string sol_spec_file);
     ~Benchmark();
     bool parse_options(std::string file);
     bool iterate_options();
@@ -51,10 +52,12 @@ public:
     void analysis();
     void factorize();
     void solve();
+    std::string to_string(int i);
+    std::string to_string(std::string s);
     void output_metrics();
     bool get_b_again(bool todo, bool got_b, bool before_facto);
     void call(bool a=true, bool f=true, bool s=true, bool o=true);
-    void benchmark(std::string multiple_bench);
+    void benchmark();
     void single_benchmark();
     void multiple_benchmark();
 };

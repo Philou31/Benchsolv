@@ -19,11 +19,12 @@
 
 
 template <class S, typename K, typename V>
-Benchmark<S,K,V>::Benchmark(S *solver, std::string b_file, std::string o_file, 
-    std::string a_file, std::string f_file, std::string s_file, 
-    std::string sol_spec_file): 
-    _solver(solver), _b_file(b_file), _o_file(o_file), _a_file(a_file), _f_file(f_file), 
-    _s_file(s_file), _sol_spec_file(sol_spec_file)
+Benchmark<S,K,V>::Benchmark(S *solver, std::string multiple_bench,
+        std::string b_file, std::string o_file, std::string a_file,
+        std::string f_file, std::string s_file, std::string sol_spec_file): 
+    _solver(solver), _multiple_bench(multiple_bench), _b_file(b_file), 
+    _o_file(o_file), _a_file(a_file), _f_file(f_file), _s_file(s_file), 
+    _sol_spec_file(sol_spec_file)
 {
     if (_solver->is_host()) {
         std::cout << "\nOutputs:\n";
@@ -202,6 +203,16 @@ void Benchmark<S,K,V>::solve() {
         std::cout << "Total time to do the solve         : " << cst::TIME_RATIO*_ts_tot << "\n";
     }
 }
+
+template <class S, typename K, typename V>
+std::string Benchmark<S,K,V>::to_string(int i) {
+    std::clog << "option" << i << " " << std::to_string(i) << "\t";
+    return std::to_string(i);
+}
+template <class S, typename K, typename V>
+std::string Benchmark<S,K,V>::to_string(std::string s){
+    return s;
+}
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::output_metrics() {
@@ -210,8 +221,15 @@ void Benchmark<S,K,V>::output_metrics() {
         std::cout << "Starting the Metrics\n";
     auto start = std::chrono::high_resolution_clock::now();
     _solver->metrics();
-    _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, _ta_tot, _tf_tot, 
-        _ts_tot);
+    if (!_multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
+        _o_file == _a_file && _a_file == _f_file && _f_file == _s_file && 
+        _s_file == cst::EMPTY_FILE)) {
+        _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, _ta_tot, _tf_tot, 
+            _ts_tot);
+    } else {
+        _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, _ta_tot, _tf_tot, 
+            _ts_tot, to_string(_current_key), to_string(_current_value));
+    }
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     t = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     if (_solver->is_host())
@@ -249,14 +267,14 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
 }
     
 template <class S, typename K, typename V>
-void Benchmark<S,K,V>::benchmark(std::string multiple_bench) {
+void Benchmark<S,K,V>::benchmark() {
     _solver->output_metrics_init(_sol_spec_file);
-    if (!multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
+    if (!_multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
         _o_file == _a_file && _a_file == _f_file && _f_file == _s_file && 
         _s_file == cst::EMPTY_FILE)) {
         call();
     }
-    else if (!multiple_bench.compare(cst::SINGLE)) single_benchmark();
+    else if (!_multiple_bench.compare(cst::SINGLE)) single_benchmark();
     else multiple_benchmark();
 }
     
