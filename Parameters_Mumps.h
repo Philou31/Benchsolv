@@ -143,7 +143,9 @@ namespace parm {
     const int INV_YES = 1;
     
     //SCHUR TODO
-    //WORKSPACE TODO
+    //WORKSPACE
+    const int MEMORY_PERCENT_INC = 14;
+    const int MEMORY_DEFAULT_PERCENT_INC = 80;
 }
 
 #endif /* PARAMETERS_MUMPS_H */

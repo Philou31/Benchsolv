@@ -152,6 +152,7 @@ void Mumps::init() {
     set_opt(parm::ERR_ANALYSIS, parm::ERRANAL_FULL);
     set_opt(parm::NULL_PIVOT, parm::NULL_PIVOT_YES);
     set_opt(parm::SCALING, parm::SCALE_ANALYSIS);
+    set_opt(parm::MEMORY_PERCENT_INC, parm::MEMORY_DEFAULT_PERCENT_INC);
     
     //Test Parameters
     if (_opt_key != cst::EMPTY_INT_OPT_KEY) {
