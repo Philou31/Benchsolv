@@ -206,7 +206,7 @@ void Benchmark<S,K,V>::solve() {
 
 template <class S, typename K, typename V>
 std::string Benchmark<S,K,V>::to_string(int i) {
-    std::clog << "option" << i << " " << std::to_string(i) << "\t";
+    std::clog << "option" << i << " " << std::to_string(i) << "\n";
     return std::to_string(i);
 }
 template <class S, typename K, typename V>
@@ -252,7 +252,7 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
 //    std::cout << "b:\n";
 //    _solver->display_b(10);
     bool got_b = false;
-    try {
+//    try {
         if (a) analysis();
         got_b = get_b_again(f, !got_b, _solver->get_b_before_facto());
         if (f)
@@ -261,9 +261,9 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
         if (s)
             solve();
         if (o) output_metrics();
-    } catch(...) {
-        std::cerr << "Error On This Test.\n";
-    }
+//    } catch(...) {
+//        std::cerr << "Error On This Test.\n";
+//    }
 }
     
 template <class S, typename K, typename V>
