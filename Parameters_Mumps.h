@@ -146,6 +146,8 @@ namespace parm {
     //WORKSPACE
     const int MEMORY_PERCENT_INC = 14;
     const int MEMORY_DEFAULT_PERCENT_INC = 80;
+    const int MEMORY_SIZE = 23;
+    const int MEMORY_DEFAULT_SIZE = 1000;
 }
 
 #endif /* PARAMETERS_MUMPS_H */
