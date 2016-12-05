@@ -152,9 +152,8 @@ void Mumps::init() {
     set_opt(parm::ERR_ANALYSIS, parm::ERRANAL_FULL);
     set_opt(parm::NULL_PIVOT, parm::NULL_PIVOT_YES);
     set_opt(parm::SCALING, parm::SCALE_ANALYSIS);
-    set_opt(parm::MEMORY_PERCENT_INC, parm::MEMORY_DEFAULT_PERCENT_INC);
     if (is_host())
-        set_opt(parm::MEMORY_SIZE, parm::MEMORY_DEFAULT_SIZE);
+        set_opt(parm::MEMORY_PERCENT_INC, parm::MEMORY_DEFAULT_PERCENT_INC);
     
     //Test Parameters
     if (_opt_key != cst::EMPTY_INT_OPT_KEY) {
@@ -176,6 +175,11 @@ long long Mumps::total_time(long long *t) {
 
 void Mumps::analyse() {
     mumps(parm::JOB_ANALYSIS);
+    if (is_host()) {
+        std::clog << "LOWER BOUND OF MEMORY SIZE: " << _id.INFOG(parm::MEMORY_LOWER_BOUND) << "\n";
+        set_opt(parm::MEMORY_SIZE,
+            parm::MEMORY_SIZE_FACTOR*_id.INFOG(parm::MEMORY_LOWER_BOUND));
+    }
 }
 
 void Mumps::factorize() {

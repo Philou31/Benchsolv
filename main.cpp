@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 //            cst::QR_MUMPS_C));
 //    ////Test type
 //    a.add<std::string>(cst::MULTIPLE_BENCH, cst::MULTIPLE_BENCH_C, "Run multiple benchmarks or just options from analysis file",
-//            false, cst::MULTIPLE, 
+//            false, cst::OPTION, 
 //            cmdline::oneof<std::string>(cst::MULTIPLE, cst::SINGLE, cst::OPTION));
 //    ////Option test
 //    a.add<std::string>("string_opt_key", '(', "String key of the option to change (qr_mumps)",

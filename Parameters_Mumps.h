@@ -148,6 +148,8 @@ namespace parm {
     const int MEMORY_DEFAULT_PERCENT_INC = 80;
     const int MEMORY_SIZE = 23;
     const int MEMORY_DEFAULT_SIZE = 1000;
+    const int MEMORY_SIZE_FACTOR = 2;
+    const int MEMORY_LOWER_BOUND = 16;
 }
 
 #endif /* PARAMETERS_MUMPS_H */
