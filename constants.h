@@ -51,13 +51,22 @@ namespace cst
     const std::string OPTION = "option";
     const std::string SINGLE = "single";
     const std::string MULTIPLE = "multiple";
+    //Block Distribution Option
+    const int DISTR_ROW_UNEVEN = -1;
+    const int DISTR_ROW_BLOCK = 0;
+    const int DISTR_COL_BLOCK = 1;
+    const int DISTR_ARROW_BLOCK = 2;
     
     //FILES
     const std::string EMPTY_FILE = "";
     const char OPTS_DELIMITER = ' ';
+    const int LOC_CHUNK_NUMBER = 128;
     //data.eocoe.eu/water/SHEMAT-Suite/mphase/small/
     const std::string DATA_FOLDER = "/home/filou/Bureau/CERFACS/Data/";
     const std::string A_WATER_MPHASE_SMALL_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm";
+    const std::string A_WATER_MPHASE_SMALL_FILE_LOC0 = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm.loc0";
+    const std::string A_WATER_MPHASE_SMALL_FILE_LOC1 = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm.loc1";
+    const std::string A_WATER_MPHASE_SMALL_FILE_LOC2 = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm.loc2";
     const std::string RHS_WATER_MPHASE_SMALL_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/F.mm";
     //data.eocoe.eu/water/SHEMAT-Suite/mphase/big/
     const std::string A_WATER_MPHASE_BIG_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/big/jac.mm";

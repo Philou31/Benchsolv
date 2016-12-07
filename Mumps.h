@@ -38,19 +38,27 @@ private:
     // Problem specific info
     std::string _pb_spec_file;
     int _distr;
-    bool _loc;
+    std::string _loc;
+    int _loc_beg, _loc_end = 0;
+    int _loc_option;
     int _format;
     int _opt_key, _opt_value;
+    int *_mapping;
 public:
     Mumps(std::string test_id, std::string file_A, bool n_present_A, 
         std::string file_b, bool n_present_b, int par, int sym, int distr, 
-        bool loc, int format, int comm, MPI_Comm mpi_comm, 
+        std::string loc, int loc_option, int format, int comm, MPI_Comm mpi_comm, 
         std::string pb_spec_file, int int_opt_key, int int_opt_value);
     ~Mumps();
     virtual bool is_host() override;
     void set_opt(int key, int value);
     void set_opt(int key, int value, std::string sol_spec_file);
+    void parse_loc_file();
+    virtual bool take_A_value_loc(int m, int n, int i, bool local) override;
+    virtual int nz_loc(int nz, bool local) override;
     void get_simple();
+    int nz_mapping();
+    void get_A_mapping();
     virtual void get_A() override;
     virtual void get_b() override;
     virtual void display_A(int n) override;

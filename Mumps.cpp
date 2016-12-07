@@ -12,12 +12,13 @@
 #include "Benchmark.h"
 
 Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A, 
-    std::string file_b, bool n_present_b, int par, int sym, int distr, 
-    bool loc, int format, int comm, MPI_Comm mpi_comm, 
-    std::string pb_spec_file, int int_opt_key, int int_opt_value):
+        std::string file_b, bool n_present_b, int par, int sym, int distr, 
+        std::string loc, int loc_option, int format, int comm, MPI_Comm mpi_comm, 
+        std::string pb_spec_file, int int_opt_key, int int_opt_value):
     Solver(test_id, file_A, n_present_A, file_b, n_present_b), 
     _mpi_comm(mpi_comm), _pb_spec_file(pb_spec_file), _distr(distr), 
-    _loc(loc), _format(format), _opt_key(int_opt_key), _opt_value(int_opt_value)
+    _loc(loc), _loc_option(loc_option), _format(format), 
+    _opt_key(int_opt_key), _opt_value(int_opt_value)
 {
     std::cout << "Mumps initialization:\nWorking host: " << par << 
         "\nSymmetry: " << sym << "\nCommunicator: " << comm << "\nFormat: " << 
@@ -58,6 +59,76 @@ void Mumps::set_opt(int key, int value, std::string sol_spec_file) {
     }
 }
 
+bool Mumps::take_A_value_loc(int m, int n, int i, bool local) {
+    bool res = true;
+    if (local && (_distr == parm::A_DISTR_ANALYSIS || _distr == parm::A_DISTR_FACTO) &&
+            _loc != cst::EMPTY_FILE) {
+        switch (_loc_option) {
+            case cst::DISTR_ROW_UNEVEN:
+                if (_proc_id == _nb_procs-1)
+                    res = m>=_proc_id*_id.n/_nb_procs;
+                else
+                    res = m>=_proc_id*_id.n/_nb_procs && m<(_proc_id+1)*_id.n/_nb_procs;
+                break;
+            case cst::DISTR_ROW_BLOCK:
+                res = m>=_loc_beg && m<=_loc_end;
+                break;
+            case cst::DISTR_COL_BLOCK:
+                res = n>=_loc_beg && n<=_loc_end;
+                break;
+            case cst::DISTR_ARROW_BLOCK:
+                res = n>=_loc_beg && m>=_loc_beg && (m<=_loc_end || n<=_loc_end);
+                break;
+            default:
+                std::cerr << "Unrecognized option";
+                break;
+        }
+    } else if (local && _distr == parm::A_DISTR_FACTO_MAPPING && _id.mapping[i] != _proc_id) {
+        res = false;
+    }
+    return res;
+}
+
+void Mumps::parse_loc_file() {
+    _id.nz_loc=0;
+    std::clog << "\nGetting loc file: " << _loc << "\n";
+    std::ifstream infile(_loc.c_str());
+    std::string strInput;
+    int id;
+    _loc_beg=100000;
+    _loc_end=0;
+    int beg, end, nz;
+    // While there's still stuff left to read
+    std::getline(infile, strInput);
+    while (infile) {
+        std::stringstream stream(strInput);
+        stream >> id;
+        if (id*_nb_procs>=_proc_id*cst::LOC_CHUNK_NUMBER and 
+                id*_nb_procs<(_proc_id+1)*cst::LOC_CHUNK_NUMBER) {
+            stream >> beg;
+            if (_loc_beg > beg)
+                _loc_beg = beg;
+            stream >> end;
+            if (_loc_end < end)
+                _loc_end = end;
+            stream >> nz;
+            _id.nz_loc += nz;
+        }
+        std::getline(infile, strInput);
+    }
+    infile.close();
+}
+
+int Mumps::nz_loc(int nz, bool local) {
+    if (local && (_distr == parm::A_DISTR_ANALYSIS || _distr == parm::A_DISTR_FACTO) &&
+            _loc != cst::EMPTY_FILE) {
+        parse_loc_file();
+        return _id.nz_loc;
+    } else if (local && _distr == parm::A_DISTR_FACTO_MAPPING)
+        return nz_mapping();
+    return nz;
+}
+
 void Mumps::get_simple() {
     if (is_host())
         Solver::get_simple(_id.n, _id.n, _id.nz, &_id.a, &_id.irn, &_id.jcn, 
@@ -65,16 +136,44 @@ void Mumps::get_simple() {
 }
 
 void Mumps::get_A() {
-    if (_loc) {
-        get_MM(_file_A + std::to_string(_proc_id), _id.n, _id.n, _id.nz_loc, 
-            &_id.a_loc, {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false);
+    if (is_host() && (_distr == parm::A_DISTR_FACTO || 
+            _distr == parm::A_DISTR_FACTO_MAPPING || 
+            _distr == parm::A_CENTRALIZED)) {
+        get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn},
+            _n_present_A, false);
+    }
+    if (_distr == parm::A_DISTR_ANALYSIS || _distr == parm::A_DISTR_FACTO) {
+        if (_loc != cst::EMPTY_FILE) {
+            get_MM(_file_A, _id.n, _id.n, _id.nz_loc, &_id.a_loc, 
+                {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false, true);
+        } else
+            get_MM(_file_A + std::to_string(_proc_id), _id.n, _id.n, _id.nz_loc, 
+                &_id.a_loc, {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false, true);
         MPI_Reduce(&_id.nz_loc, &_id.nz, 1, MPI_INT, MPI_SUM, cst::HOST_ID, _mpi_comm);
         if (is_host())
             std::clog << "All fronts gathered, nz: " << _id.nz << "\n";
-    } else
-        if (is_host())
-            get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn}, 
-                _n_present_A, false);
+    }
+}
+
+int Mumps::nz_mapping() {
+    if (_proc_id != parm::HOST_ID)
+        _id.mapping = new int[_id.nz];
+    MPI_Bcast(_id.mapping, _id.nz, MPI_INTEGER, parm::HOST_ID, _mpi_comm);
+    if (_distr == parm::A_DISTR_FACTO_MAPPING) {
+        _id.nz_loc = 0;
+        for(int i = 0; i < _id.nz; ++i)
+            if (_id.mapping[i] == _proc_id)
+                _id.nz_loc += 1;
+    }
+    return _id.nz_loc;
+}
+
+void Mumps::get_A_mapping() {
+    if (_distr == parm::A_DISTR_FACTO_MAPPING || _distr == parm::A_DISTR_FACTO) {
+        finalize_solve();
+        get_MM(_file_A, _id.n, _id.n, _id.nz_loc, &_id.a_loc, 
+            {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false, true);
+    }
 }
 
 void Mumps::get_b() {
@@ -83,6 +182,7 @@ void Mumps::get_b() {
             get_MM(_file_b, _id.n, _id.n, _id.nz, &_id.rhs, {}, _n_present_b, true);
         else alloc_rhs();
     }
+    display_b(10);
 }
 
 void Mumps::display_A(int n) {
@@ -183,6 +283,7 @@ void Mumps::analyse() {
 }
 
 void Mumps::factorize() {
+    get_A_mapping();
     mumps(parm::JOB_FACTO);
 }
 
@@ -247,7 +348,7 @@ void Mumps::assemble_A() {
 }
 
 void Mumps::metrics() {
-    if (_loc) {
+    if (_distr != parm::A_CENTRALIZED) {
         assemble_A();
     }
     if (is_host()) {
@@ -287,7 +388,6 @@ void Mumps::finalize_solve() {
     delete[] _id.irn_loc;
     delete[] _id.jcn_loc;
     delete[] _id.a_loc;
-    delete[] _id.rhs;
 }
 
 void Mumps::problem_spec_metrics_output() {
@@ -308,6 +408,7 @@ void Mumps::problem_spec_metrics_output() {
 }
 
 void Mumps::finalize() {
+    delete[] _id.rhs;
     if (is_host())
         problem_spec_metrics_output();
     mumps(parm::JOB_END);

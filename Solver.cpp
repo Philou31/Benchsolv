@@ -5,6 +5,8 @@
 //! \date 13/11/2016, 18:42
 //!
 
+#include <deque>
+
 #include "Solver.h"
 
 Solver::Solver(std::string test_id, std::string file_A, bool n_present_A, 
@@ -36,7 +38,7 @@ void Solver::get_simple(int &m, int &n, int &nz, double **values,
 }
 
 void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values, 
-        std::vector<int**> indexes, bool n_present, bool rhs) {
+        std::vector<int**> indexes, bool n_present, bool rhs, bool local) {
     std::ifstream infile(file.c_str());
     std::cout << "\nGetting matrix in file: " << file << "\n";
 
@@ -67,7 +69,7 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
             break;
     }
 
-    int size = nz;
+    int size = nz_loc(nz, local);
     if (rhs) size = m;
     
     std::clog << "Matrix of size: " << size << "\n";
@@ -79,18 +81,30 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
     }
     *values = new double[size];
     
-    int iii(0);
+    int iii(0), jjj(0);
     // While there's still stuff left to read
+    unsigned int i;
+    int mn[2];
     while (infile) {
         // each line contains: row column value
         std::stringstream stream(strInput);
-        for(std::vector<int**>::iterator it = indexes.begin(); 
-                it != indexes.end(); ++it) {
-            stream >> *((**it)+iii);
+        mn[0] = 0;
+        mn[1] = 0;
+        for(i = 0; i < indexes.size(); ++i) {
+            stream >> mn[i];
         }
-        stream >> *(*values+iii);
-        ++iii;
+        if (rhs || take_A_value_loc(mn[0], mn[1], jjj, local)) {
+            i = 0;
+            for(std::vector<int**>::iterator it = indexes.begin(); 
+                    it != indexes.end(); ++it) {
+                *((**it)+iii) = mn[i];
+                ++i;
+            }
+            stream >> *(*values+iii);
+            ++iii;
+        }
         std::getline(infile, strInput);
+        ++jjj;
     }
     infile.close();
 }

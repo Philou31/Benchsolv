@@ -47,6 +47,14 @@ void QR_Mumps::set_opt(std::string key, int value, std::string sol_spec_file) {
     myfile.close();
 }
 
+bool QR_Mumps::take_A_value_loc(int m, int n, int i, bool local) {
+    return true;
+}
+
+int QR_Mumps::nz_loc(int nz, bool local) {
+    return nz;
+}
+
 void QR_Mumps::get_simple() {
     Solver::get_simple(_qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_qrm_mat.val, 
             &_qrm_mat.irn, &_qrm_mat.jcn, _nrhs, _qrm_mat.m, 

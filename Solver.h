@@ -35,10 +35,13 @@ public:
     Solver(std::string test_id, std::string file_A, bool n_present_A, 
         std::string file_b, bool n_present_b);
     virtual bool is_host() = 0;
+    virtual bool take_A_value_loc(int m, int n, int i, bool local) = 0;
+    virtual int nz_loc(int nz, bool local) = 0;
     void get_simple(int &m, int &n, int &nz, double **values, int **irn,
         int **jcn, int &nrhs, int &lrhs, double **rhs);
     void get_MM(std::string file, int &m, int &n, int &nz, 
-        double **values, std::vector<int**> indexes, bool n_present, bool rhs);
+        double **values, std::vector<int**> indexes, bool n_present, bool rhs, 
+        bool local=false);
     virtual void get_A() = 0;
     virtual void get_b() = 0;
     void display_ass(double values[], int n, std::vector<int*> indexes);

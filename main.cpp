@@ -43,22 +43,22 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////
 //    //Matrix A
 //    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
-//            cst::A_MHD_10_FILE);
+//            cst::A_WATER_MPHASE_SMALL_FILE);
 //    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Matrix B
 //    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-//            false, cst::RHS_MHD_10_FILE);
-////    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-////            false, cst::RHS_MHD_10_FILE);
+//            false, cst::RHS_WATER_MPHASE_SMALL_FILE);
 //    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
 //    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-//            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_DISTR_ANALYSIS,
-//            parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
-//    a.add<std::string>("A_loc", '&', "Are getting the matrix A locally or on master",
-//            false, cst::FALSE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+//            false, parm::A_DISTR_FACTO, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+//            parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
+//    a.add<std::string>("A_loc", '&', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
+//            false, cst::A_WATER_MPHASE_SMALL_FILE_LOC2);
+//    a.add<int>("A_loc_option", '#', "option of distribution for local matrices", 
+//            false, 2, cmdline::oneof<int>(-1, 0, 1, 2));
 //    a.add<int>("A_format", '_', "Format of the matrix A",
 //            false, parm::A_ASSEMBLED_FORMAT, cmdline::oneof<int>(parm::A_ASSEMBLED_FORMAT,
 //            parm::A_ELEMENTAL_FORMAT));
@@ -129,10 +129,12 @@ int main(int argc, char **argv) {
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Mumps
     a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_DISTR_ANALYSIS,
-            parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
-    a.add<std::string>("A_loc", '&', "Are getting the matrix A locally or on master",
-            false, cst::FALSE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
+            false, parm::A_DISTR_FACTO_MAPPING, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+            parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
+    a.add<std::string>("A_loc", '0', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
+            false, cst::EMPTY_FILE);
+    a.add<int>("A_loc_option", '#', "option of distribution for local matrices", 
+            false, -1, cmdline::oneof<int>(-1, 0, 1, 2));
     a.add<int>("A_format", '_', "Format of the matrix A",
             false, parm::A_ASSEMBLED_FORMAT, cmdline::oneof<int>(parm::A_ASSEMBLED_FORMAT,
             parm::A_ELEMENTAL_FORMAT));
@@ -207,7 +209,8 @@ int main(int argc, char **argv) {
     ////Mumps
     int sym = a.get<int>("A_symmetry");
     int distr = a.get<int>("A_distribution");
-    bool loc = !cst::TRUE.compare(a.get<std::string>("A_loc"));
+    std::string loc = a.get<std::string>("A_loc");
+    int loc_option = a.get<int>("A_loc_option");
     int format = a.get<int>("A_format");
     int par = a.get<int>("working_host");
     ////Test id
@@ -237,13 +240,13 @@ int main(int argc, char **argv) {
     std::string sol_spec_file = a.get<std::string>("sol_spec_metrics");
     std::string pb_spec_file = a.get<std::string>("pb_spec_metrics");
     
-    FILE *f = freopen(fortran_output.c_str(), "a", stdout);
-    std::cout << "Redirecting fortran output to : " << fortran_output << 
-            " at adress: " << f << "\n";
-    std::ofstream coutstr(output_file, std::ofstream::app);
-    std::cout.rdbuf(coutstr.rdbuf());
-    std::ofstream cerrstr(error_file, std::ofstream::app);
-    std::cerr.rdbuf(cerrstr.rdbuf());
+//    FILE *f = freopen(fortran_output.c_str(), "a", stdout);
+//    std::cout << "Redirecting fortran output to : " << fortran_output << 
+//            " at adress: " << f << "\n";
+//    std::ofstream coutstr(output_file, std::ofstream::app);
+//    std::cout.rdbuf(coutstr.rdbuf());
+//    std::ofstream cerrstr(error_file, std::ofstream::app);
+//    std::cerr.rdbuf(cerrstr.rdbuf());
     
 //    auto elapsed = std::chrono::high_resolution_clock::now() - start;
 //    t = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
@@ -251,9 +254,9 @@ int main(int argc, char **argv) {
 
     if (solver == "mumps" || solver == "m") {
 //    start = std::chrono::high_resolution_clock::now();
-        Mumps s(test_id, A_file, An, b_file, bn, par, sym, distr, loc, format,
-            cst::USE_COMM_WORLD, MPI_COMM_WORLD, pb_spec_file, int_opt_key, 
-            int_opt_value);
+        Mumps s(test_id, A_file, An, b_file, bn, par, sym, distr, loc, 
+            loc_option, format, cst::USE_COMM_WORLD, MPI_COMM_WORLD, 
+            pb_spec_file, int_opt_key, int_opt_value);
 //    elapsed = std::chrono::high_resolution_clock::now() - start;
 //    t = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 //    std::clog << "Time to init MUMPS                : " << cst::TIME_RATIO*t << "\n";

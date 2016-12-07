@@ -39,6 +39,8 @@ public:
     virtual bool is_host() override;
     void set_opt(std::string key, int value);
     void set_opt(std::string key, int value, std::string sol_spec_file);
+    virtual bool take_A_value_loc(int m, int n, int i, bool local) override;
+    virtual int nz_loc(int nz, bool local) override;
     void get_simple();
     virtual void get_A() override;
     virtual void get_b() override;
