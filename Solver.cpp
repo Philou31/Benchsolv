@@ -81,7 +81,7 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
     }
     *values = new double[size];
     
-    int iii(0), jjj(0);
+    int iii(0), jjj(0), kkk(0);
     // While there's still stuff left to read
     unsigned int i;
     int mn[2];
@@ -102,10 +102,15 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
             }
             stream >> *(*values+iii);
             ++iii;
+            if (is_host() && iii%(size/10)==0) {
+                ++kkk;
+                std::clog << kkk*10 << "% loaded...\n";
+            }
         }
         std::getline(infile, strInput);
         ++jjj;
     }
+    std::clog << "Done\n";
     infile.close();
 }
 

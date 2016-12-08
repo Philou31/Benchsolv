@@ -116,6 +116,7 @@ void Mumps::parse_loc_file() {
         }
         std::getline(infile, strInput);
     }
+    std:: clog << _id.nz_loc << "\t" << _loc_end << "\t" << _loc_beg << "\n";
     infile.close();
 }
 
