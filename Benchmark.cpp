@@ -206,8 +206,8 @@ void Benchmark<S,K,V>::solve() {
 
 template <class S, typename K, typename V>
 std::string Benchmark<S,K,V>::to_string(int i) {
-    std::clog << "option" << i << " " << std::to_string(i) << "\n";
-    return std::to_string(i);
+    std::clog << "option" << i << " " << std::to_string(static_cast<long long>(i)) << "\n";
+    return std::to_string(static_cast<long long>(i));
 }
 template <class S, typename K, typename V>
 std::string Benchmark<S,K,V>::to_string(std::string s){

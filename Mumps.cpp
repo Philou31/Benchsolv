@@ -148,7 +148,7 @@ void Mumps::get_A() {
             get_MM(_file_A, _id.n, _id.n, _id.nz_loc, &_id.a_loc, 
                 {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false, true);
         } else
-            get_MM(_file_A + std::to_string(_proc_id), _id.n, _id.n, _id.nz_loc, 
+            get_MM(_file_A + std::to_string(static_cast<long long>(_proc_id)), _id.n, _id.n, _id.nz_loc, 
                 &_id.a_loc, {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false, true);
         MPI_Reduce(&_id.nz_loc, &_id.nz, 1, MPI_INT, MPI_SUM, cst::HOST_ID, _mpi_comm);
         if (is_host())
@@ -183,7 +183,6 @@ void Mumps::get_b() {
             get_MM(_file_b, _id.n, _id.n, _id.nz, &_id.rhs, {}, _n_present_b, true);
         else alloc_rhs();
     }
-    display_b(10);
 }
 
 void Mumps::display_A(int n) {
