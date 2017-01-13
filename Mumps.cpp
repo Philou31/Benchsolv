@@ -10,6 +10,7 @@
 #include "Mumps.h"
 #include "constants.h"
 #include "Benchmark.h"
+#include <omp.h>
 
 Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A, 
         std::string file_b, bool n_present_b, int par, int sym, int distr, 
@@ -238,6 +239,19 @@ void Mumps::init() {
     std::clog << "Running on CPU " << sched_getcpu() << " on node " << processor_name << "\n";
     std::clog << "Proc id " << _proc_id << " on a total of " << _nb_procs << " procs\n\n";
     mumps(parm::JOB_INIT);
+    
+    int nthreads, tid;
+    #pragma omp parallel private(tid)
+    {
+        /* Obtain and print thread id */
+       	tid = omp_get_thread_num();
+        std::clog << "Initialisation of OpenMP thread = " << tid << " on cpu " << sched_getcpu() << "\n";
+        /* Only master thread does this */
+        if (tid == 0) {
+            nthreads = omp_get_num_threads();
+            std::clog << "Number of OpenMP threads = " << nthreads << "\n";
+        }  /* All threads join master thread and terminate */
+    }
     
     if (is_host()) {
         std::cout << "Setting distribution and format:\n";
