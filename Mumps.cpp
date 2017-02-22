@@ -29,7 +29,6 @@ Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A,
         _mem_relax = mem_relax;
     if (_mem_factor != 1)
         _mem_factor = mem_factor;
-    _mem_factor(mem_factor);
     init();
     get_A();
     get_b();
