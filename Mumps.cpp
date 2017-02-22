@@ -15,8 +15,7 @@ Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A,
     Solver(test_id, file_A, n_present_A, file_b, n_present_b, nrows, ncols, nz), 
     _mpi_comm(mpi_comm), _pb_spec_file(pb_spec_file), _distr(distr), 
     _loc(loc), _loc_option(loc_option), _format(format), 
-    _opt_key(int_opt_key), _opt_value(int_opt_value), _mem_relax(mem_relax),
-    _mem_factor(mem_factor)
+    _opt_key(int_opt_key), _opt_value(int_opt_value)
 {
     std::cout << "Mumps initialization:\nWorking host: " << par << 
         "\nSymmetry: " << sym << "\nCommunicator: " << comm << "\nFormat: " << 
@@ -26,6 +25,11 @@ Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A,
     _id.sym = sym;
     _id.comm_fortran = comm;
     _id.nrhs = 1;
+    if (mem_relax != 0)
+        _mem_relax = mem_relax;
+    if (_mem_factor != 1)
+        _mem_factor = mem_factor;
+    _mem_factor(mem_factor);
     init();
     get_A();
     get_b();

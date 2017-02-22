@@ -39,6 +39,8 @@ namespace cst
     const std::string MUMPS_C = "m";
     const std::string QR_MUMPS = "qr_mumps";
     const std::string QR_MUMPS_C = "qrm";
+    const int NIL_MEM_RELAX = 0;
+    const int NIL_MEM_FACTOR = 1;
     // Phases
     const std::string ANALYSIS_PHASE = "analysis";
     const std::string FACTORIZATION_PHASE = "factorization";
