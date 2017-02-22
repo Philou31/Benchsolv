@@ -1,15 +1,12 @@
 //! \file constants.h
-//! \brief Constants for the project
+//! \brief Constants of the whole project
 //! \author filou
 //! \version 0.1
 //! \date 22/10/2016, 18:42
 //!
-//! Constants for the project:
-//!     - file names
-//!     - physical constants
-//!     - parameter values
-//!     - mathematical constants
+//! Constants valid through whole software.
 //!
+
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
@@ -31,7 +28,7 @@ namespace cst
     const int TAG_IRN = 3;
     const int TAG_JCN = 4;
     
-    //Arguments
+    //Defaults arguments
     const std::string EMPTY_STRING_OPT_KEY = "";
     const int EMPTY_INT_OPT_KEY = -42;
     const int EMPTY_INT_OPT_VALUE = -42;
@@ -42,6 +39,11 @@ namespace cst
     const std::string MUMPS_C = "m";
     const std::string QR_MUMPS = "qr_mumps";
     const std::string QR_MUMPS_C = "qrm";
+    // Phases
+    const std::string ANALYSIS_PHASE = "analysis";
+    const std::string FACTORIZATION_PHASE = "factorization";
+    const std::string SOLVE_PHASE = "solve";
+    const std::string METRICS_PHASE = "metrics";
     //Bool option
     const std::string TRUE = "true";
     const std::string FALSE = "false";
@@ -61,22 +63,16 @@ namespace cst
     const std::string EMPTY_FILE = "";
     const char OPTS_DELIMITER = ' ';
     const int LOC_CHUNK_NUMBER = 128;
-    //data.eocoe.eu/water/SHEMAT-Suite/mphase/small/
+    //SHEMAT-Suite/mphase/small/
     const std::string DATA_FOLDER = "/home/filou/Bureau/CERFACS/Data/";
-    const std::string A_WATER_MPHASE_SMALL_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm";
-    const std::string A_WATER_MPHASE_SMALL_FILE_LOC0 = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm.loc_0";
-    const std::string A_WATER_MPHASE_SMALL_FILE_LOC1 = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm.loc_1";
-    const std::string A_WATER_MPHASE_SMALL_FILE_LOC2 = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/jac.mm.loc_2";
-    const std::string RHS_WATER_MPHASE_SMALL_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/small/F.mm";
-    //data.eocoe.eu/water/SHEMAT-Suite/mphase/big/
-    const std::string A_WATER_MPHASE_BIG_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/big/jac.mm";
-    const std::string RHS_WATER_MPHASE_BIG_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mphase/big/F.mm";
-    //data.eocoe.eu/water/SHEMAT-Suite/mpmc/small/
-    const std::string A_WATER_MPMC_SMALL_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mpmc/small/jac.mm";
-    const std::string RHS_WATER_MPMC_SMALL_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mpmc/small/F.mm";
-    //data.eocoe.eu/water/SHEMAT-Suite/mpmc/big/
-    const std::string A_WATER_MPMC_BIG_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mpmc/big/jac.mm";
-    const std::string RHS_WATER_MPMC_BIG_FILE = cst::DATA_FOLDER + "data.eocoe.eu/water/SHEMAT-Suite/mpmc/big/F.mm";
+    const std::string A_WATER_MPHASE_SMALL_FILE = cst::DATA_FOLDER + "SHEMAT-Suite/mphase/small/jac.mm";
+    const std::string A_WATER_MPHASE_SMALL_FILE_LOC0 = cst::DATA_FOLDER + "SHEMAT-Suite/mphase/small/jac.mm.loc_0";
+    const std::string A_WATER_MPHASE_SMALL_FILE_LOC1 = cst::DATA_FOLDER + "SHEMAT-Suite/mphase/small/jac.mm.loc_1";
+    const std::string A_WATER_MPHASE_SMALL_FILE_LOC2 = cst::DATA_FOLDER + "SHEMAT-Suite/mphase/small/jac.mm.loc_2";
+    const std::string RHS_WATER_MPHASE_SMALL_FILE = cst::DATA_FOLDER + "SHEMAT-Suite/mphase/small/F.mm";
+    //SHEMAT-Suite/mphase/big/
+    const std::string A_WATER_MPHASE_BIG_FILE = cst::DATA_FOLDER + "SHEMAT-Suite/mphase/big/jac.mm";
+    const std::string RHS_WATER_MPHASE_BIG_FILE = cst::DATA_FOLDER + "SHEMAT-Suite/mphase/big/F.mm";
     //Fares/
     const std::string A_FARES_FILE_PREFIX = cst::DATA_FOLDER + "Fares/PROCESS_00";
     const std::string RHS_FARES_FILE = cst::DATA_FOLDER + "Fares/RHS";
@@ -85,14 +81,6 @@ namespace cst
     const std::string A_MHD_10_FILE = cst::DATA_FOLDER + "MHD/10/A.txt";
     const std::string RHS_MHD_10_FILE = cst::DATA_FOLDER + "MHD/10/RHS.txt";
     const std::string Sol_MHD_10_FILE = cst::DATA_FOLDER + "MHD/10/Sol.txt";
-    //100
-    const std::string A_MHD_100_FILE = cst::DATA_FOLDER + "MHD/100/A.txt";
-    const std::string RHS_MHD_100_FILE = cst::DATA_FOLDER + "MHD/100/RHS.txt";
-    const std::string Sol_MHD_100_FILE = cst::DATA_FOLDER + "MHD/100/Sol.txt";
-    //150
-    const std::string A_MHD_150_FILE = cst::DATA_FOLDER + "MHD/150/A.txt";
-    const std::string RHS_MHD_150_FILE = cst::DATA_FOLDER + "MHD/150/RHS.txt";
-    const std::string Sol_MHD_150_FILE = cst::DATA_FOLDER + "MHD/150/Sol.txt";
     //50
     const std::string A_MHD_50_FILE = cst::DATA_FOLDER + "MHD/50/A.txt";
     const std::string RHS_MHD_50_FILE = cst::DATA_FOLDER + "MHD/50/RHS.txt";
@@ -105,4 +93,3 @@ namespace cst
 }
 
 #endif /* CONSTANTS_H */
-

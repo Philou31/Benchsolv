@@ -1,15 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Parameter_QR_Mumps.h
- * Author: filou
- *
- * Created on 13 novembre 2016, 18:34
- */
+//! \file Parameters_QR_Mumps.h
+//! \brief Constants of the QR_Mumps class
+//! \author filou
+//! \version 0.1
+//! \date 22/10/2016, 18:42
+//!
+//! Constants used in the QR_Mumps class.
+//!
 
 #ifndef PARAMETER_QR_MUMPS_H
 #define PARAMETER_QR_MUMPS_H

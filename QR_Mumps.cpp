@@ -10,28 +10,84 @@
 
 QR_Mumps::QR_Mumps(std::string test_id, std::string file_A, bool n_present_A, 
     std::string file_b, bool n_present_b, std::string string_opt_key, 
-    int int_opt_value):
-    Solver(test_id, file_A, n_present_A, file_b, n_present_b),
+    int int_opt_value, int nrows, int ncols, int nz):
+    Solver(test_id, file_A, n_present_A, file_b, n_present_b, nrows, ncols, nz),
     _opt_key(string_opt_key), _opt_value(int_opt_value)
 {
-    std::cout << "INITIALIZE QR_MUMPS !\n";
+    std::cout << "QR_Mumps initialization\n";
     init();
     get_A();
     get_b();
 }
 
 QR_Mumps::~QR_Mumps() {
-    finalize_solve();
+    deallocate_A();
     finalize();   
 }
 
-bool QR_Mumps::is_host() {
-//    std::cout << "No MPI on QR_Mumps.\n";
-    return true;
+////////////////////////////////////////////////////
+// MATRIX INPUT
+////////////////////////////////////////////////////    
+void QR_Mumps::get_A() {
+    get_MM(_file_A, _qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_qrm_mat.val, 
+        {&_qrm_mat.irn, &_qrm_mat.jcn}, _n_present_A, false);
+    // Matrix is transposed only if more columns than lines
+    if(_qrm_mat.m < _qrm_mat.n) _transp = 't';
+    else _transp = 'n';
 }
 
+void QR_Mumps::get_b() {
+    if (is_host()) {
+        // If the file for b is empty, initialize b with all 1
+        if (_file_b.compare(cst::EMPTY_FILE)) {
+            get_MM(_file_b, _qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_b, {}, _n_present_b,
+                true);
+        } else alloc_rhs();
+        alloc_solve_residual();
+    }
+}
+    
+////////////////////////////////////////////////////
+// MATRIX OUTPUT
+////////////////////////////////////////////////////
+void QR_Mumps::display_A(int n) {
+    display_ass(_qrm_mat.val, n, {_qrm_mat.irn, _qrm_mat.jcn});
+}
+
+void QR_Mumps::display_A() {
+    display_ass(_qrm_mat.val, _qrm_mat.nz, {_qrm_mat.irn, _qrm_mat.jcn});
+}
+
+void QR_Mumps::display_x(int n) {
+    display_ass(_x, n, {});
+}
+
+void QR_Mumps::display_x() {
+    display_ass(_x, _qrm_mat.m, {});
+}
+
+void QR_Mumps::display_b(int n) {
+    display_ass(_b, n, {});
+}
+
+void QR_Mumps::display_b() {
+    display_ass(_b, _qrm_mat.m, {});    
+}
+
+void QR_Mumps::display_r(int n) {
+    display_ass(_r, n, {});
+}
+
+void QR_Mumps::display_r() {
+    display_ass(_r, _qrm_mat.m, {});
+}
+    
+////////////////////////////////////////////////////
+// RUNNING THE SOLVER
+////////////////////////////////////////////////////
 void QR_Mumps::set_opt(std::string key, int value) {
     std::cout << "Setting " << key << " to value " << value << "\n";
+    // The output units are set with qrm_gseti_c, others with dqrm_pseti_c
     if (!key.compare(parqrm::EUNIT) || !key.compare(parqrm::OUNIT) ||
         !key.compare(parqrm::DUNIT)) {
         qrm_gseti_c(key.c_str(), value);
@@ -47,72 +103,23 @@ void QR_Mumps::set_opt(std::string key, int value, std::string sol_spec_file) {
     myfile.close();
 }
 
-bool QR_Mumps::take_A_value_loc(int m, int n, int i, bool local) {
-    return true;
-}
-
-int QR_Mumps::nz_loc(int nz, bool local) {
-    return nz;
-}
-
-void QR_Mumps::get_simple() {
-    Solver::get_simple(_qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_qrm_mat.val, 
-            &_qrm_mat.irn, &_qrm_mat.jcn, _nrhs, _qrm_mat.m, 
-            &_b);
-}
-    
-void QR_Mumps::get_A() {
-    get_MM(_file_A, _qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_qrm_mat.val, 
-        {&_qrm_mat.irn, &_qrm_mat.jcn}, _n_present_A, false);
-    if(_qrm_mat.m < _qrm_mat.n) _transp = 't';
-    else _transp = 'n';
-}
-
-void QR_Mumps::get_b() {
-    if (is_host()) {
-        if (_file_b.compare(cst::EMPTY_FILE)) {
-            get_MM(_file_b, _qrm_mat.m, _qrm_mat.n, _qrm_mat.nz, &_b, {}, _n_present_b,
-                true);
-        } else alloc_rhs();
-        alloc_solve_residual();
-    }
-}
-
-void QR_Mumps::display_A(int n) {
-    display_ass(_qrm_mat.val, n, {_qrm_mat.irn, _qrm_mat.jcn});
-}
-
-void QR_Mumps::display_x(int n) {
-    display_ass(_x, n, {});
-}
-
-void QR_Mumps::display_b(int n) {
-    display_ass(_b, n, {});
-}
-
-void QR_Mumps::display_r(int n) {
-    display_ass(_r, n, {});
-}
-
-void QR_Mumps::display_A() {
-    display_ass(_qrm_mat.val, _qrm_mat.nz, {_qrm_mat.irn, _qrm_mat.jcn});
-}
-
-void QR_Mumps::display_x() {
-    display_ass(_x, _qrm_mat.m, {});
-}
-
-void QR_Mumps::display_b() {
-    display_ass(_b, _qrm_mat.m, {});    
-}
-
-void QR_Mumps::display_r() {
-    display_ass(_r, _qrm_mat.m, {});
-}
-
 void QR_Mumps::init() {
     qrm_init_c(0);
     dqrm_spmat_init_c(&_qrm_mat);
+    
+    // Display initialized OpenMP
+    int nthreads, tid;
+    #pragma omp parallel private(tid)
+    {
+        /* Obtain and print thread id */
+       	tid = omp_get_thread_num();
+        std::clog << "Initialisation of OpenMP thread = " << tid << " on cpu " << sched_getcpu() << "\n";
+        /* Only master thread does this */
+        if (tid == 0) {
+            nthreads = omp_get_num_threads();
+            std::clog << "Number of OpenMP threads = " << nthreads << "\n";
+        }  /* All threads join master thread and terminate */
+    }
     
     //Default parameters
     //Global
@@ -125,7 +132,7 @@ void QR_Mumps::init() {
     set_opt(parqrm::ORDERING.c_str(), qrm_scotch_);
     set_opt(parqrm::KEEPH.c_str(), qrm_yes_);
     
-    //Test Parameters
+    //Set Test Parameters
     if (_opt_key != cst::EMPTY_STRING_OPT_KEY && 
             _opt_value != cst::EMPTY_INT_OPT_VALUE) {
         if (is_host())
@@ -138,34 +145,20 @@ void QR_Mumps::init() {
         std::clog << "TEST ID: " << _test_id << "\n";
 }
 
-long long QR_Mumps::total_time(long long *t) {
-    return *t;
-}
-
 void QR_Mumps::analyse() {
     dqrm_analyse_c(&_qrm_mat, _transp);
+}
+
+bool QR_Mumps::get_b_before_facto() {
+    return false;
 }
 
 void QR_Mumps::factorize() {
     dqrm_factorize_c(&_qrm_mat, _transp);
 }
 
-void QR_Mumps::alloc_solve_residual() {
-    _r = new double[_qrm_mat.m];
-    for(int i = 0; i < _qrm_mat.m; i++) _r[i] = _b[i];
-    _x = new double[_qrm_mat.n];
-    for(int i = 0; i < _qrm_mat.n; i++) _x[i] = (double)0.0;
-}
-
-void QR_Mumps::alloc_rhs() {
-    if (is_host()) {
-        _b = new double[_qrm_mat.m];
-        int i;
-        for(i = 0; i < _qrm_mat.m; i++) _b[i] = (double)1.0;
-    }
-}
-
 void QR_Mumps::solve() {
+    // Launched differently if transposed matrix
     if(_transp == 'n'){
         dqrm_apply_c(&_qrm_mat, 't', _b, _nrhs);
         dqrm_solve_c(&_qrm_mat, 'n', _b, _x, _nrhs);
@@ -190,30 +183,44 @@ void QR_Mumps::call() {
     metrics();
 }
 
-bool QR_Mumps::get_b_before_facto() {
-    return false;
-}
-
-void QR_Mumps::set_no_output() {
-    set_opt(parqrm::DUNIT.c_str(), -1);
-    set_opt(parqrm::OUNIT.c_str(), -1);
-    set_opt(parqrm::EUNIT.c_str(), -1);
-}
-
-void QR_Mumps::finalize_solve() {
-    delete[] _qrm_mat.irn;
-    delete[] _qrm_mat.jcn;
-    delete[] _qrm_mat.val;
-    dqrm_spmat_destroy_c(&_qrm_mat);
+void QR_Mumps::finalize() {
+    qrm_finalize_c();
     delete[] _b;
     delete[] _r;
     delete[] _x;
 }
-
-void QR_Mumps::finalize() {
-    qrm_finalize_c();
+    
+////////////////////////////////////////////////////
+// (DE)ALLOCATION
+////////////////////////////////////////////////////
+void QR_Mumps::alloc_rhs() {
+    // Initialize rhs on host with all 1
+    if (is_host()) {
+        _b = new double[_qrm_mat.m];
+        int i;
+        for(i = 0; i < _qrm_mat.m; i++) _b[i] = (double)1.0;
+    }
 }
 
+void QR_Mumps::alloc_solve_residual() {
+    // Initialized residual array
+    _r = new double[_qrm_mat.m];
+    for(int i = 0; i < _qrm_mat.m; i++) _r[i] = _b[i];
+    // Initialized solution array
+    _x = new double[_qrm_mat.n];
+    for(int i = 0; i < _qrm_mat.n; i++) _x[i] = (double)0.0;
+}
+
+void QR_Mumps::deallocate_A() {
+    delete[] _qrm_mat.irn;
+    delete[] _qrm_mat.jcn;
+    delete[] _qrm_mat.val;
+    dqrm_spmat_destroy_c(&_qrm_mat);
+}
+
+////////////////////////////////////////////////////
+// OUTPUTS
+////////////////////////////////////////////////////
 void QR_Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
@@ -226,8 +233,7 @@ void QR_Mumps::output_metrics_init(std::string file) {
 }
     
 void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta, 
-        long long tf, long long ts, long long ta_tot, 
-        long long tf_tot, long long ts_tot, std::string key,
+        long long tf, long long ts, std::string key,
         std::string value) {
     if (is_host()) {
         std::cout << "\ncurrent option    =  " << key << "\n" <<
@@ -235,9 +241,6 @@ void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta,
             "time for analysis =  " << ta << "\n" <<
             "time for facto    =  " << cst::TIME_RATIO*tf << "\n" <<
             "time for solve    =  " << cst::TIME_RATIO*ts << "\n" <<
-            "time for analysis =  " << cst::TIME_RATIO*ts_tot << "\n" <<
-            "time for facto    =  " << cst::TIME_RATIO*tf_tot << "\n" <<
-            "time for solve    =  " << cst::TIME_RATIO*ts_tot << "\n" <<
             "||A||             =  " << _anrm << "\n" <<
             "||b||             =  " << _bnrm << "\n" <<
             "||x||             =  " << _xnrm << "\n" <<
@@ -256,8 +259,7 @@ void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta,
         myfile << _test_id << "\t" << _file_A << "\tqr_mumps\t" << 1 << "\t" <<
             key << "\t" << value << "\t" << 
             cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
-            cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
-            cst::TIME_RATIO*tf << "\t" << cst::TIME_RATIO*ts_tot << "\t" <<        
+            cst::TIME_RATIO*ts << "\t" <<       
             _xnrm << "\t" << _rnrm << "\t" << _onrm << 
             "\t" << _qrm_mat.gstats[qrm_nnz_r_] << "\t" << 
             _qrm_mat.gstats[qrm_nnz_h_] << "\t" << 
@@ -267,4 +269,10 @@ void QR_Mumps::output_metrics(std::string sol_spec_file, long long ta,
             _qrm_mat.gstats[qem_e_facto_mempeak_] << "\n";
         myfile.close();
     }
+}
+
+void QR_Mumps::set_no_output() {
+    set_opt(parqrm::DUNIT.c_str(), -1);
+    set_opt(parqrm::OUNIT.c_str(), -1);
+    set_opt(parqrm::EUNIT.c_str(), -1);
 }

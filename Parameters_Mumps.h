@@ -1,15 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Parameters_Mumps.h
- * Author: filou
- *
- * Created on 13 novembre 2016, 18:34
- */
+//! \file Parameters_Mumps.h
+//! \brief Constants of the Mumps class
+//! \author filou
+//! \version 0.1
+//! \date 22/10/2016, 18:42
+//!
+//! Constants used in the Mumps class.
+//!
 
 #ifndef PARAMETERS_MUMPS_H
 #define PARAMETERS_MUMPS_H
@@ -22,7 +18,6 @@ namespace parm {
     const int SYM_UNSYM(0), SYM_GENERAL(1), SYM_DEFPOS(2);
     // PAR
     const int WORKING_HOST(1), NOT_WORKING_HOST(0);
-    const int HOST_ID(0);
     
     //Output stream
     const int OUT_ERROR(1);
@@ -142,13 +137,12 @@ namespace parm {
     const int INV_NO = 0;
     const int INV_YES = 1;
     
-    //SCHUR TODO
     //WORKSPACE
     const int MEMORY_PERCENT_INC = 14;
     const int MEMORY_DEFAULT_PERCENT_INC = 80;
     const int MEMORY_SIZE = 23;
     const int MEMORY_DEFAULT_SIZE = 1000;
-    const int MEMORY_SIZE_FACTOR = 2;
+    const double MEMORY_SIZE_FACTOR = 2;
     const int MEMORY_LOWER_BOUND = 16;
 }
 

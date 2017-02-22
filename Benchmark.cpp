@@ -21,23 +21,29 @@
 template <class S, typename K, typename V>
 Benchmark<S,K,V>::Benchmark(S *solver, std::string multiple_bench,
         std::string b_file, std::string o_file, std::string a_file,
-        std::string f_file, std::string s_file, std::string sol_spec_file): 
+        std::string f_file, std::string s_file, std::string sol_spec_file,
+        bool output_metrics): 
     _solver(solver), _multiple_bench(multiple_bench), _b_file(b_file), 
     _o_file(o_file), _a_file(a_file), _f_file(f_file), _s_file(s_file), 
-    _sol_spec_file(sol_spec_file)
+    _sol_spec_file(sol_spec_file), _output_metrics(output_metrics)
 {
     if (_solver->is_host()) {
         std::cout << "\nOutputs:\n";
-        if (b_file != cst::EMPTY_FILE)
+        // Single benchmark
+        if (b_file != cst::EMPTY_FILE && _multiple_bench == cst::SINGLE)
             std::cout << "benchmark option file: " << b_file << "\n";
-        if (o_file != cst::EMPTY_FILE)
-            std::cout << "output options file: " << o_file << "\n";
-        if (a_file != cst::EMPTY_FILE)
-            std::cout << "analysis options file:" << a_file << "\n";
-        if (f_file != cst::EMPTY_FILE)
-            std::cout << "factorization options file: " << f_file << "\n";
-        if (s_file != cst::EMPTY_FILE)
-            std::cout << "solve options file: " << s_file << "\n";
+        // Multiple benchmark
+        if (_multiple_bench == cst::MULTIPLE) {
+            if (o_file != cst::EMPTY_FILE)
+                std::cout << "output options file: " << o_file << "\n";
+            if (a_file != cst::EMPTY_FILE)
+                std::cout << "analysis options file:" << a_file << "\n";
+            if (f_file != cst::EMPTY_FILE)
+                std::cout << "factorization options file: " << f_file << "\n";
+            if (s_file != cst::EMPTY_FILE)
+                std::cout << "solve options file: " << s_file << "\n";
+        }
+        // Solution specific metrics
         if (sol_spec_file != cst::EMPTY_FILE)
             std::cout << "solution specific output file: " << sol_spec_file << "\n\n";
     }
@@ -46,7 +52,20 @@ Benchmark<S,K,V>::Benchmark(S *solver, std::string multiple_bench,
 template <class S, typename K, typename V>
 Benchmark<S,K,V>::~Benchmark()
 {}
+
+template <class S, typename K, typename V>
+std::string Benchmark<S,K,V>::to_string(int i) {
+    return std::to_string(static_cast<long long>(i));
+}
+template <class S, typename K, typename V>
+std::string Benchmark<S,K,V>::to_string(std::string s){
+    return s;
+}
+  
     
+////////////////////////////////////////////////////
+// OPTIONS HANDLING
+////////////////////////////////////////////////////  
 template <class S, typename K, typename V>
 bool Benchmark<S,K,V>::parse_options(std::string file) {
     // If no file, no options to parse
@@ -68,19 +87,23 @@ bool Benchmark<S,K,V>::parse_options(std::string file) {
     char delimiter = cst::OPTS_DELIMITER;
     K key;
     V value;
-    // Read banner and m, n, nz line
+    // Read line per line the options file
     while (infile) {
         std::getline(infile, line);
         std::istringstream stream(line);
         std::string strToken;
+        // In a line there if first the key then all values
         while(std::getline(stream, strToken, delimiter)) {
             std::stringstream stream(strToken);
+            // First the key
             if (is_key) {
                 stream >> key;
+                // Add key and initialize the corresponding array in _opts_val
                 _opts.push_back(key);
                 _opts_vals.push_back({});
                 parsed = true;
             } else {
+                // Add value
                 stream >> value;
                 _opts_vals.back().push_back(value);
             }
@@ -88,6 +111,7 @@ bool Benchmark<S,K,V>::parse_options(std::string file) {
         }
         is_key = true;
     }
+    // Display options if any
     if (parsed) display_options();
     return parsed;
 }
@@ -95,28 +119,41 @@ bool Benchmark<S,K,V>::parse_options(std::string file) {
 template <class S, typename K, typename V>
 bool Benchmark<S,K,V>::iterate_options() {
     int tmp_current_size = 0;
+    // If keys left
     if (_opts.size() > 0) {
+        // If vals left
         if (_opts_vals.front().size() >= 1) { 
+            // save number of vals for current key
             if (_current_vals_size == 0)
                 _current_vals_size = _opts_vals.front().size();
+            // save current key/value
             K key = _opts.front();
             V value = _opts_vals.front().front();
             _current_key = key;
             _current_value = value;
+            // set current option key/value
             _solver->set_opt(key, value, _sol_spec_file);
+            // remove value and, if last value, remove key also
             _opts_vals.front().pop_front();
             if (_opts_vals.front().size() == 0) {
                 _opts_vals.pop_front();
                 _opts.pop_front();
                 tmp_current_size = _current_vals_size;
                 _current_vals_size = 0;
+                // If last key and last value, launch test
                 if (tmp_current_size == 1 && _opts.size() == 0) return true;
+                // If than 1 value for key, launch test
                 if (tmp_current_size > 1) return true;
+                // Else (last value of not last key), no test, recurrent call
                 return iterate_options();
             }
+            // If not last value, launch test
             return true;
-        } else _opts_vals.pop_front();
+        }
+        // No value left, remove array ov values
+        else _opts_vals.pop_front();
     }
+    // No key, no test
     return false;
 }
     
@@ -147,71 +184,49 @@ bool Benchmark<S,K,V>::iterate_solver(std::string file, bool a,
         bool f, bool s, bool o) {
     bool iterated = false;
     parse_options(file);
+    // Loop while there are options to test
     while (iterate_options()) {
+        // display option on host
         if (_solver->is_host())
             std::clog << "\nNEW TEST WITH KEY: " << _current_key << ", VALUE: " 
                 << _current_value << "\n";
+        // If modified, read b again:
+        //      - Before factorisation (if icntl32=1: forward elim in facto)
+        //      - Else, before solve
+        if (!_got_b) {
+            bool before_facto=_solver->get_b_before_facto();
+            if (f && before_facto) get_b_again();
+            if (s && !before_facto) get_b_again();
+        }
+        // call the solver on phases in arguments
         call(a, f, s, o);
+        // Result is true if at least a call
         iterated = true;
         ++_nb_tests;
     }
     return iterated;
 }
     
+    
+////////////////////////////////////////////////////
+// RUNNING THE SOLVER
+////////////////////////////////////////////////////
 template <class S, typename K, typename V>
-void Benchmark<S,K,V>::analysis() {
+void Benchmark<S,K,V>::phase(void (Solver::*function)(), const std::string name, 
+        long long int &t) {
     // Analysis
     if (_solver->is_host())
-	    std::cout << "\nStarting the analysis\n";
+	    std::cout << "\nStarting the " << name << "\n";
     auto start = std::chrono::high_resolution_clock::now();
-    _solver->analyse();
-    auto elapsed = std::chrono::high_resolution_clock::now() - start;
-    _ta = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    _ta_tot = _solver->total_time(&_ta);
-    if (_solver->is_host()) {
-        std::cout << "Time to do the analysis            : " << cst::TIME_RATIO*_ta << "\n";
-        std::cout << "Total time to do the analysis      : " << cst::TIME_RATIO*_ta_tot << "\n";
-    }
-}
     
-template <class S, typename K, typename V>
-void Benchmark<S,K,V>::factorize() {
-    if (_solver->is_host())
-        std::cout << "Starting the factorization\n";
-    auto start = std::chrono::high_resolution_clock::now();
-     _solver->factorize();
-    auto elapsed = std::chrono::high_resolution_clock::now() - start;
-    _tf = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    _tf_tot = _solver->total_time(&_tf);
-    if (_solver->is_host()) {
-        std::cout << "Time to do the facto               : " << cst::TIME_RATIO*_tf << "\n";
-        std::cout << "Total time to do the facto         : " << cst::TIME_RATIO*_tf_tot << "\n";
-    }
-}
+//    (this->*function)();
+    (_solver->*function)();
     
-template <class S, typename K, typename V>
-void Benchmark<S,K,V>::solve() {
-    if (_solver->is_host())
-        std::cout << "Starting the solve\n";
-    auto start = std::chrono::high_resolution_clock::now();
-    _solver->solve();
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
-    _ts = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    _ts_tot = _solver->total_time(&_ts);
+    t = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     if (_solver->is_host()) {
-        std::cout << "Time to do the solve               : " << cst::TIME_RATIO*_ts << "\n";
-        std::cout << "Total time to do the solve         : " << cst::TIME_RATIO*_ts_tot << "\n";
+        std::cout << "Time to do the " << name << " : " << cst::TIME_RATIO*t << "\n";
     }
-}
-
-template <class S, typename K, typename V>
-std::string Benchmark<S,K,V>::to_string(int i) {
-    std::clog << "option" << i << " " << std::to_string(static_cast<long long>(i)) << "\n";
-    return std::to_string(static_cast<long long>(i));
-}
-template <class S, typename K, typename V>
-std::string Benchmark<S,K,V>::to_string(std::string s){
-    return s;
 }
     
 template <class S, typename K, typename V>
@@ -224,83 +239,78 @@ void Benchmark<S,K,V>::output_metrics() {
     if (!_multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
         _o_file == _a_file && _a_file == _f_file && _f_file == _s_file && 
         _s_file == cst::EMPTY_FILE)) {
-        _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, _ta_tot, _tf_tot, 
-            _ts_tot);
-    } else {
-        _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, _ta_tot, _tf_tot, 
-            _ts_tot, to_string(_current_key), to_string(_current_value));
+        _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts);
+    }
+    // If not single_bench, output the current option 
+    else {
+        _solver->output_metrics(_sol_spec_file, _ta, _tf, _ts, 
+            to_string(_current_key), to_string(_current_value));
     }
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
     t = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
     if (_solver->is_host())
-        std::cout << "Time to do the metrics               : " << cst::TIME_RATIO*t << "\n";
+        std::cout << "Time to do the metrics : " << cst::TIME_RATIO*t << "\n";
 }
     
 template <class S, typename K, typename V>
-bool Benchmark<S,K,V>::get_b_again(bool todo, bool got_b, bool before_facto) {
-    if (todo && !got_b && _solver->get_b_before_facto()) {
-        _solver->get_b();
-        return true;
-    }
-    return false;
+void Benchmark<S,K,V>::get_b_again() {
+    _solver->get_b();
 }
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
-//    std::cout << "A:\n";
-//    _solver->display_A(10);
-//    std::cout << "b:\n";
-//    _solver->display_b(10);
-    bool got_b = false;
-//    try {
-        if (a) analysis();
-        got_b = get_b_again(f, !got_b, _solver->get_b_before_facto());
-        if (f)
-            factorize();
-        got_b = get_b_again(s, !got_b, !_solver->get_b_before_facto());
-        if (s)
-            solve();
-        if (o) output_metrics();
-//    } catch(...) {
-//        std::cerr << "Error On This Test.\n";
-//    }
+    if (a) phase(&Solver::analyse, cst::ANALYSIS_PHASE, _ta);
+    if (f) phase(&Solver::factorize, cst::FACTORIZATION_PHASE, _tf);
+    long long int t;
+    if (s) {
+        phase(&Solver::solve, cst::SOLVE_PHASE, t);
+        _got_b=false;
+    }
+    if (o && _output_metrics) output_metrics();
 }
     
+    
+////////////////////////////////////////////////////
+// RUN BENCHMARKS
+////////////////////////////////////////////////////
 template <class S, typename K, typename V>
-void Benchmark<S,K,V>::benchmark() {
-    _solver->output_metrics_init(_sol_spec_file);
+void Benchmark<S,K,V>::run() {
+    if (_output_metrics)
+        _solver->output_metrics_init(_sol_spec_file);
+    // If simple test (OPTION), call the whole solver once
+    //      !compare is actually string equality
     if (!_multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
         _o_file == _a_file && _a_file == _f_file && _f_file == _s_file && 
-        _s_file == cst::EMPTY_FILE)) {
+        _s_file == cst::EMPTY_FILE))
         call();
-    }
+    // Single options file launching tests with all phases
     else if (!_multiple_bench.compare(cst::SINGLE)) single_benchmark();
+    // Multiple options file and multiple tests depending on file
     else multiple_benchmark();
 }
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::single_benchmark() {
     bool b = iterate_solver(_b_file);
-    if (_solver->is_host()) {
-        if(b) std::cout << "\nSingle benchmark executed.\n";
-        else {
-            call();
-        }
-    }
+    // If no benchmark was launched, launch a test, at least
+    if(!b) call();
+    std::cout << "\nSingle benchmark executed.\n";
 }
     
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::multiple_benchmark() {
+    // output options: launch complete test
     iterate_solver(_o_file);
+    // analysis options: idem and if no previous test, launch an analysis
     bool a = iterate_solver(_a_file);
-    // If no previous test, run an analysis
     if (!a) call(true, false, false, false);
-    bool f = iterate_solver(_f_file);
-    // If no previous test, run a facto
+    // facto options: start test at facto and if no previous test, launch a facto
+    bool f = iterate_solver(_f_file) || a;
     if (!f) call(false, true, false, false);
-    bool s = iterate_solver(_s_file);
-    // If no previous test, run a solve
+    // solve options: start test at solve and if no previous test, launch a solve
+    bool s = iterate_solver(_s_file) || f;
     if (!s) call(false, false);
+    // Display number of tests
     if (_solver->is_host())
         std::cout << "\nNumber of benchmarks executed: " << _nb_tests << "\n";
 }
