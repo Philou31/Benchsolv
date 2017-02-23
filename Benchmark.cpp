@@ -219,7 +219,6 @@ void Benchmark<S,K,V>::phase(void (Solver::*function)(), const std::string name,
 	    std::cout << "\nStarting the " << name << "\n";
     auto start = std::chrono::high_resolution_clock::now();
     
-//    (this->*function)();
     (_solver->*function)();
     
     auto elapsed = std::chrono::high_resolution_clock::now() - start;
@@ -260,7 +259,10 @@ void Benchmark<S,K,V>::get_b_again() {
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
     if (a) phase(&Solver::analyse, cst::ANALYSIS_PHASE, _ta);
-    if (f) phase(&Solver::factorize, cst::FACTORIZATION_PHASE, _tf);
+    if (f) {
+        _solver->get_A_again();
+        phase(&Solver::factorize, cst::FACTORIZATION_PHASE, _tf);
+    }
     long long int t;
     if (s) {
         phase(&Solver::solve, cst::SOLVE_PHASE, t);

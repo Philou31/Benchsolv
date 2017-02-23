@@ -223,8 +223,10 @@ void Mumps::get_A() {
 }
 
 void Mumps::get_A_again() {
-    deallocate_A();
-    get_A_loc();
+    if (_distr == parm::A_DISTR_FACTO_MAPPING || _distr == parm::A_DISTR_FACTO) {
+        deallocate_A();
+        get_A_loc();
+    }
 }
 
 void Mumps::get_b() {
@@ -362,8 +364,6 @@ bool Mumps::get_b_before_facto() {
 }
 
 void Mumps::factorize() {
-    if (_distr == parm::A_DISTR_FACTO_MAPPING || _distr == parm::A_DISTR_FACTO)
-        get_A_again();
     mumps(parm::JOB_FACTO);
 }
 

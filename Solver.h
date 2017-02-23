@@ -147,6 +147,22 @@ public:
     virtual void get_A() = 0;
     
     //!
+    //! \fn void get_A_again()
+    //! \brief deallocate and get the matrix A again using get_MM
+    //!
+    //! This function deallocate then reads again the matrix A. It is useful in 
+    //! a context where:
+    //!     - A is modified but should be used again
+    //!     - A is not read at the solver initialization but later
+    //!     - A has a special treatment such as distributed matrix,...
+    //!
+    //! \param key
+    //! \param value
+    //! \param sol_spec_file: File for the metrics specific to the solution
+    //!
+    virtual void get_A_again();
+    
+    //!
     //! \fn void get_b()
     //! \brief Read the input right hand side
     //!

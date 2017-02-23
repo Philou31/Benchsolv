@@ -143,7 +143,7 @@ public:
     //! \param value
     //! \param sol_spec_file: File for the metrics specific to the solution
     //!
-    void get_A_again();
+    virtual void get_A_again() override;
     
     //!
     //! \fn void get_A_loc()

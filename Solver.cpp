@@ -129,6 +129,11 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
     infile.close();
 }
 
+void Solver::get_A_again() {
+    std::cout << "\nNo need to read the matrix A again.\n";
+    return;
+}
+
 ////////////////////////////////////////////////////
 // MATRIX OUTPUT
 ////////////////////////////////////////////////////
