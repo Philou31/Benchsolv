@@ -45,11 +45,11 @@ private:
     int _loc_option;    // Type of distribution (per row, per line,...)
     int _format;    // Input matrix format
     int _opt_key, _opt_value;   // Key and value of the option to test
-    int *_mapping;  // Mapping array for distribution
     // Percentage relaxation added to the estimated memory
     int _mem_relax=parm::MEMORY_DEFAULT_PERCENT_INC;
     // Estimated memory + relaxation will be mult by this
     float _mem_factor=parm::MEMORY_SIZE_FACTOR;
+    bool _A_assembled=false;    // Is the global A in the data structure ?
 public:
     //!
     //! \brief Constructor of the Mumps class
@@ -132,20 +132,6 @@ public:
     int nz_mapping();
     
     //!
-    //! \fn void get_A_again()
-    //! \brief deallocate then get the local matrix A using get_MM
-    //!
-    //! This function should only be called with mapping or facto distribution:
-    //! the values of the local matrices should be input locally before 
-    //! factorisation using get_A_loc
-    //!
-    //! \param key
-    //! \param value
-    //! \param sol_spec_file: File for the metrics specific to the solution
-    //!
-    virtual void get_A_again() override;
-    
-    //!
     //! \fn void get_A_loc()
     //! \brief read the local part of matrix A in the distributed case
     //!
@@ -158,7 +144,9 @@ public:
     virtual bool take_A_value_loc(int m, int n, int i, bool local) override;
     virtual int nz_loc(int nz, bool local) override;
     virtual void get_A() override;
+    virtual void get_A_again() override;
     virtual void get_b() override;
+    virtual void get_b_again() override;
     
     ////////////////////////////////////////////////////
     // MATRIX OUTPUT
@@ -239,6 +227,8 @@ public:
     virtual void alloc_solve_residual() override;
     virtual void alloc_rhs() override;
     virtual void deallocate_A() override;
+    virtual void deallocate_A_loc() override;
+    virtual void deallocate_b() override;
     
     ////////////////////////////////////////////////////
     // OUTPUTS

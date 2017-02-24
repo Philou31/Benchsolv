@@ -101,6 +101,7 @@ public:
     virtual void alloc_solve_residual() override;
     virtual void alloc_rhs() override;
     virtual void deallocate_A() override;
+    virtual void deallocate_b() override;
     
     ////////////////////////////////////////////////////
     // OUTPUTS

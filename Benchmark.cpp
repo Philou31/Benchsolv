@@ -193,10 +193,12 @@ bool Benchmark<S,K,V>::iterate_solver(std::string file, bool a,
         // If modified, read b again:
         //      - Before factorisation (if icntl32=1: forward elim in facto)
         //      - Else, before solve
+        // TODOMAYBE: For compatibility with other solvers, do the following
+        // inside Mumps ?
         if (!_got_b) {
             bool before_facto=_solver->get_b_before_facto();
-            if (f && before_facto) get_b_again();
-            if (s && !before_facto) get_b_again();
+            if (f && before_facto) _solver->get_b_again();
+            if (s && !before_facto) _solver->get_b_again();
         }
         // call the solver on phases in arguments
         call(a, f, s, o);
@@ -252,15 +254,20 @@ void Benchmark<S,K,V>::output_metrics() {
 }
     
 template <class S, typename K, typename V>
-void Benchmark<S,K,V>::get_b_again() {
-    _solver->get_b();
-}
-    
-template <class S, typename K, typename V>
 void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
-    if (a) phase(&Solver::analyse, cst::ANALYSIS_PHASE, _ta);
+    if (a) {
+        phase(&Solver::analyse, cst::ANALYSIS_PHASE, _ta);
+//         Is the mapping of A dependent on options ?????
+//        _got_A=false;
+    }
     if (f) {
-        _solver->get_A_again();
+        // In the case of distributed input, local parts must be read before
+        // factorization (facto or mapping distribution). But it only has to be 
+        // read once (at each analysis ?????)
+        if (!_got_A) {
+            _solver->get_A_again();
+            _got_A=true;
+        }
         phase(&Solver::factorize, cst::FACTORIZATION_PHASE, _tf);
     }
     long long int t;

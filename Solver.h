@@ -156,10 +156,6 @@ public:
     //!     - A is not read at the solver initialization but later
     //!     - A has a special treatment such as distributed matrix,...
     //!
-    //! \param key
-    //! \param value
-    //! \param sol_spec_file: File for the metrics specific to the solution
-    //!
     virtual void get_A_again();
     
     //!
@@ -170,8 +166,16 @@ public:
     //! read the right hand side on the host only. If the attribute _file_b is
     //! empty, the right hand side is initialized with all 1 values.
     //!
-    //!
     virtual void get_b() = 0;
+    
+    //!
+    //! \fn void get_b_again()
+    //! \brief deallocate and get the matrix b again using get_A_loc
+    //!
+    //! This function deallocate then reads again the right hand side b. It is 
+    //! useful in a context where b is modified during a step (typically solve).
+    //!
+    virtual void get_b_again();
 
     
     ////////////////////////////////////////////////////
@@ -367,14 +371,6 @@ public:
     // (DE)ALLOCATION
     ////////////////////////////////////////////////////
     //!
-    //! \fn void deallocate_A()
-    //! \brief Deallocate A
-    //!
-    //! This function will deallocate the rows, columns and values arrays of A
-    //!
-    virtual void deallocate_A() = 0;
-    
-    //!
     //! \fn void alloc_solve_residual()
     //! \brief Allocate the residual array
     //!
@@ -385,6 +381,30 @@ public:
     //! \brief Allocate the right hand side array and initialize with values 1
     //!
     virtual void alloc_rhs() = 0;
+    //!
+    //! \fn void deallocate_A()
+    //! \brief Deallocate A
+    //!
+    //! This function will deallocate the rows, columns and values arrays of A
+    //!
+    virtual void deallocate_A() = 0;
+    
+    //!
+    //! \fn void deallocate_A_loc()
+    //! \brief Deallocate the local part of A
+    //!
+    //! This function will deallocate the rows, columns and values arrays of the
+    //! local part of A. It is only appropriate in a disributed context: does
+    //! nothing by default.
+    //!
+    virtual void deallocate_A_loc();
+    //!
+    //! \fn void deallocate_b()
+    //! \brief Deallocate b
+    //!
+    //! This function will deallocate the values array of b
+    //!
+    virtual void deallocate_b() = 0;
     
     
     ////////////////////////////////////////////////////

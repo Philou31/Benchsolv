@@ -22,6 +22,7 @@ QR_Mumps::QR_Mumps(std::string test_id, std::string file_A, bool n_present_A,
 
 QR_Mumps::~QR_Mumps() {
     deallocate_A();
+    deallocate_b();
     finalize();   
 }
 
@@ -185,7 +186,6 @@ void QR_Mumps::call() {
 
 void QR_Mumps::finalize() {
     qrm_finalize_c();
-    delete[] _b;
     delete[] _r;
     delete[] _x;
 }
@@ -216,6 +216,10 @@ void QR_Mumps::deallocate_A() {
     delete[] _qrm_mat.jcn;
     delete[] _qrm_mat.val;
     dqrm_spmat_destroy_c(&_qrm_mat);
+}
+
+void QR_Mumps::deallocate_b() {
+    delete[] _b;
 }
 
 ////////////////////////////////////////////////////

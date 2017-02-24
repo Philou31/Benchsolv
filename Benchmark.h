@@ -37,8 +37,9 @@ private:
     long long _ta = 0, _tf = 0, _ts = 0;
     // Right hand side read and not modified. Initialized true: b always read at
     // solver initialization
-    bool _got_b=true;
-    bool _output_metrics=true;
+    bool _got_A=false;   // Specify if local A has been read in the current test
+    bool _got_b=true;   // Specify is b is unchanged since reading
+    bool _output_metrics=true;  // Do you want to output the metrics ?
 public:
     //!
     //! \brief Constructor of the Benchmark class
@@ -170,19 +171,6 @@ public:
     //! \brief Call the output_metrics method of the solver and output exec time
     //!
     void output_metrics();
-    
-    //!
-    //! \fn void get_b_again()
-    //! \brief get the right hand side again
-    //!
-    //! This function read the right hand side again. It should only be called
-    //! if an option in the solver makes reading the right hand side again 
-    //! mandatory at one stage.
-    //! For example, in Mumps, the right hand side is modified during solve and
-    //! to launch a new test with the same data, it is necessary to read b 
-    //! again (before factorization or solve depending on the option icntl32).
-    //!
-    void get_b_again();
     
     //!
     //! \fn void call(bool a=true, bool f=true, bool s=true, bool o=true)

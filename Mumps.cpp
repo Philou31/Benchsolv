@@ -29,14 +29,16 @@ Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A,
         _mem_relax = mem_relax;
     if (_mem_factor != 1)
         _mem_factor = mem_factor;
-    set_opt(parm::ERR_ANALYSIS, erranal);
     init();
+    set_opt(parm::ERR_ANALYSIS, erranal);
     get_A();
     get_b();
 }
 
 Mumps::~Mumps() {
     deallocate_A();
+    deallocate_A_loc();
+    deallocate_b();
     finalize();
 }
 
@@ -49,6 +51,8 @@ void Mumps::assemble_A() {
     int *recvcounts;
     if (is_host())
         recvcounts = new int[_nb_procs];
+    else recvcounts = NULL;
+    std::clog << "BLABLA1\n";
     MPI_Gather(&_id.nz_loc, 1, MPI_INT, recvcounts, 1, MPI_INT, cst::HOST_ID,
             MPI_COMM_WORLD);
     // The displacements of the gather are the same as the receive counts
@@ -65,12 +69,26 @@ void Mumps::assemble_A() {
         _id.jcn=new int[_id.nz];
         _id.a=new double[_id.nz];
     }
+    else {
+        displs = NULL;
+        _id.irn=NULL;
+        _id.jcn=NULL;
+        _id.a=NULL;
+    }
+    std::clog << "BLABLA2\n";
     MPI_Gatherv(_id.irn_loc, _id.nz_loc, MPI_INT, _id.irn, recvcounts, displs,
         MPI_INT, cst::HOST_ID, MPI_COMM_WORLD);
     MPI_Gatherv(_id.jcn_loc, _id.nz_loc, MPI_INT, _id.jcn, recvcounts, displs,
         MPI_INT, cst::HOST_ID, MPI_COMM_WORLD);
+    std::clog << "BLABLA3\n";
     MPI_Gatherv(_id.a_loc, _id.nz_loc, MPI_DOUBLE, _id.a, recvcounts, displs,
         MPI_DOUBLE, cst::HOST_ID, MPI_COMM_WORLD);
+    std::clog << "BLABLA4\n";
+    _A_assembled=true;
+    if (is_host()) {
+        delete[] recvcounts;
+        delete[] displs;
+    }
 }
 
 bool Mumps::is_host() {
@@ -213,21 +231,27 @@ void Mumps::get_A_loc() {
 void Mumps::get_A() {
     // If not matrix distributed (structure+values) before analysis, read entire
     // matrix on host
-    if (is_host() && _distr != parm::A_DISTR_ANALYSIS) {
-        get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn},
-            _n_present_A, false);
+    if (_distr != parm::A_DISTR_ANALYSIS) {
+        if (is_host())
+            get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn},
+                _n_present_A, false);
+            _A_assembled=true;
     }
-    // If matrix distributed (structure+values) before analysis/facto, read
-    // local part in all processes, even host
-    if (_distr == parm::A_DISTR_ANALYSIS)
-        get_A_loc();
+    // If matrix distributed (structure+values) before analysi, read local part 
+    // in all processes, even host
+    else get_A_loc();
 }
 
 void Mumps::get_A_again() {
     if (_distr == parm::A_DISTR_FACTO_MAPPING || _distr == parm::A_DISTR_FACTO) {
-        deallocate_A();
+        deallocate_A_loc();
         get_A_loc();
     }
+}
+
+void Mumps::get_b_again() {
+    deallocate_b();
+    get_b();
 }
 
 void Mumps::get_b() {
@@ -373,7 +397,9 @@ void Mumps::solve() {
 
 void Mumps::metrics() {
     // If distributed matrix, assemble on host
-    if (_distr != parm::A_CENTRALIZED) {
+    if (_distr == parm::A_DISTR_ANALYSIS && !_A_assembled) {
+        if (is_host())
+            deallocate_A();
         assemble_A();
     }
     // Compute metrics on host
@@ -386,6 +412,7 @@ void Mumps::metrics() {
         _metrics.A_norm(_anrm);
         _metrics.sol_norm(_xnrm);
         _metrics.b_norm(_bnrm);
+        delete[] _r;
     }
 }
 
@@ -397,7 +424,6 @@ void Mumps::call() {
 }
 
 void Mumps::finalize() {
-    delete[] _id.rhs;
     if (is_host())
         problem_spec_metrics_output();
     mumps(parm::JOB_END);
@@ -429,9 +455,16 @@ void Mumps::deallocate_A() {
     delete[] _id.irn;
     delete[] _id.jcn;
     delete[] _id.a;
+}
+
+void Mumps::deallocate_A_loc() {
     delete[] _id.irn_loc;
     delete[] _id.jcn_loc;
     delete[] _id.a_loc;
+}
+
+void Mumps::deallocate_b() {
+    delete[] _id.rhs;
 }
 
 ////////////////////////////////////////////////////

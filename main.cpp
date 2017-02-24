@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
 //    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-//            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+//            false, parm::A_DISTR_ANALYSIS, cmdline::oneof<int>(parm::A_CENTRALIZED, 
 //            parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
 //    a.add<std::string>("A_loc", '0', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
 //            false, cst::A_WATER_MPHASE_SMALL_FILE_LOC2);
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 //    a.add<float>("mem_factor", '6', "Estimated memory + relaxation will be multiplicated by this factor",
 //            false, cst::NIL_MEM_FACTOR);
 //    a.add<int>("error_analysis", '7', "Computed error analysis during solve",
-//            false, parm::ERRANAL_NO, cmdline::oneof<int>(parm::ERRANAL_FULL, 
+//            false, parm::ERRANAL_FULL, cmdline::oneof<int>(parm::ERRANAL_FULL, 
 //            parm::ERRANAL_PART, parm::ERRANAL_NO));
 //    //Benchmark
 //    ////Test id
@@ -111,11 +111,11 @@ int main(int argc, char **argv) {
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    ////Output files
 //    a.add<std::string>("fortran_output", 'm', "File where all fortran outputs will go",
-//            false, "res/fortran");
+//            false, cst::EMPTY_FILE);
 //    a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
-//            false, "res/out");
+//            false, cst::EMPTY_FILE);
 //    a.add<std::string>("error_file", 'e', "File where all error outputs will go",
-//            false, "res/err");
+//            false, cst::EMPTY_FILE);
 //    ////Metrics files
 //    a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
 //            false, "res/sol_spec.txt");
@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     //Mumps
     a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-            false, parm::A_DISTR_FACTO_MAPPING, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_CENTRALIZED, 
             parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
     a.add<std::string>("A_loc", '0', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
             false, cst::EMPTY_FILE);

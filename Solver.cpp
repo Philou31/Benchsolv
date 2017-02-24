@@ -75,10 +75,12 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
     }
 
     // Real size of the matrix to read:
-    //      matrix distributed => read local part => size=local_nz
-    int size = nz_loc(nz, local);
+    int size = nz;
     //      rhs => size=number of columns
     if (rhs) size = m;
+    //      matrix distributed => read local part => size=local_nz
+    else size = nz_loc(nz, local);
+        
     
     std::clog << "Matrix of size: " << size << "\n";
     
@@ -134,6 +136,11 @@ void Solver::get_A_again() {
     return;
 }
 
+void Solver::get_b_again() {
+    std::cout << "\nNo need to read the right hand side b again.\n";
+    return;
+}
+
 ////////////////////////////////////////////////////
 // MATRIX OUTPUT
 ////////////////////////////////////////////////////
@@ -162,3 +169,9 @@ void Solver::display_r(int n) {
 void Solver::display_r() {
     std::cerr << "display_r: Not available with this solver.\n";
 }
+    
+    
+////////////////////////////////////////////////////
+// (DE)ALLOCATION
+////////////////////////////////////////////////////
+void Solver::deallocate_A_loc() {}
