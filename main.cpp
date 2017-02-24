@@ -72,6 +72,9 @@ int main(int argc, char **argv) {
             false, cst::NIL_MEM_RELAX);
     a.add<float>("mem_factor", '6', "Estimated memory + relaxation will be multiplicated by this factor",
             false, cst::NIL_MEM_FACTOR);
+    a.add<int>("error_analysis", '7', "Computed error analysis during solve",
+            false, parm::ERRANAL_NO, cmdline::oneof<int>(parm::ERRANAL_FULL, 
+            parm::ERRANAL_PART, parm::ERRANAL_NO));
     //Benchmark
     ////Test id
     a.add<std::string>("test_id", '$', "Id of the test, suffix of the output files",
@@ -108,11 +111,11 @@ int main(int argc, char **argv) {
             false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
     ////Output files
     a.add<std::string>("fortran_output", 'm', "File where all fortran outputs will go",
-            false, cst::EMPTY_FILE);
+            false, "res/fortran");
     a.add<std::string>("output_file", 'o', "File where all normal outputs will go",
-            false, cst::EMPTY_FILE);
+            false, "res/out");
     a.add<std::string>("error_file", 'e', "File where all error outputs will go",
-            false, cst::EMPTY_FILE);
+            false, "res/err");
     ////Metrics files
     a.add<std::string>("sol_spec_metrics", 'l', "File where all the solution specific metrics will go",
             false, "res/sol_spec.txt");
@@ -157,6 +160,9 @@ int main(int argc, char **argv) {
 //            false, cst::NIL_MEM_RELAX);
 //    a.add<float>("mem_factor", '6', "Estimated memory + relaxation will be multiplicated by this factor",
 //            false, cst::NIL_MEM_FACTOR);
+//    a.add<int>("error_analysis", '7', "Computed error analysis during solve",
+//            false, parm::ERRANAL_NO, cmdline::oneof<int>(parm::ERRANAL_FULL, 
+//            parm::ERRANAL_PART, parm::ERRANAL_NO));
 //    //Benchmark
 //    ////Test id
 //    a.add<std::string>("test_id", '$', "Id of the test, suffix of the output files",
@@ -237,6 +243,7 @@ int main(int argc, char **argv) {
     int par = a.get<int>("working_host");
     int mem_relax = a.get<int>("mem_relax");
     float mem_factor = a.get<float>("mem_factor");
+    int erranal = a.get<int>("error_analysis");
     ////Test id
     std::string test_id = a.get<std::string>("test_id");
     ////Test type
@@ -266,22 +273,19 @@ int main(int argc, char **argv) {
     std::string suffix = "";
     if (test_id != "")
         suffix = "_" + test_id;
-    std::string fortran_output = a.get<std::string>("fortran_output");
-    std::string output_file = a.get<std::string>("output_file");
-    std::string error_file = a.get<std::string>("error_file");
+    std::string fortran_output = a.get<std::string>("fortran_output") + suffix;
+    std::string output_file = a.get<std::string>("output_file") + suffix;
+    std::string error_file = a.get<std::string>("error_file") + suffix;
     //Redirect outputs
-    if (fortran_output.compare(cst::EMPTY_FILE)) {
-        fortran_output += suffix;
+    if (fortran_output.compare(suffix)) {
         FILE *f = freopen(fortran_output.c_str(), "a", stdout);
     }
-    if (output_file.compare(cst::EMPTY_FILE)) {
-        output_file += suffix;
-        std::ofstream coutstr(output_file, std::ofstream::app);
+    std::ofstream coutstr(output_file, std::ofstream::app);
+    if (output_file.compare(suffix)) {
         std::cout.rdbuf(coutstr.rdbuf());
     }
+    std::ofstream cerrstr(error_file, std::ofstream::app);
     if (error_file.compare(cst::EMPTY_FILE)) {
-        error_file += suffix;
-        std::ofstream cerrstr(error_file, std::ofstream::app);
         std::cerr.rdbuf(cerrstr.rdbuf());
     }
 
@@ -294,7 +298,7 @@ int main(int argc, char **argv) {
         Mumps s(test_id, A_file, An, b_file, bn, par, sym, distr, loc, 
             loc_option, format, cst::USE_COMM_WORLD, MPI_COMM_WORLD, 
             pb_spec_file, int_opt_key, int_opt_value, nrows, ncols, nz,
-            mem_relax, mem_factor);
+            mem_relax, mem_factor, erranal);
         Benchmark<Mumps, int, int> b(&s, multiple_bench, bench_file, out_file, 
             anal_file, facto_file, sol_file, sol_spec_file, output_metrics);
         // Run benchmark

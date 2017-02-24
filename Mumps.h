@@ -73,7 +73,7 @@ public:
         std::string file_b, bool n_present_b, int par, int sym, int distr, 
         std::string loc, int loc_option, int format, int comm, MPI_Comm mpi_comm, 
         std::string pb_spec_file, int int_opt_key, int int_opt_value, int nrows,
-        int ncols, int nz, int mem_relax, float mem_factor);
+        int ncols, int nz, int mem_relax, float mem_factor, int erranal);
     
     //!
     //! \brief Destructor of the Mumps class
