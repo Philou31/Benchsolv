@@ -38,6 +38,8 @@ int main(int argc, char **argv) {
     // DEBUGGING ARGUMENTS
     ////////////////////////////////////////////////////
 //    //Matrix A
+////    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
+////            "/home/filou/A.txt");
 //    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
 //            cst::A_WATER_MPHASE_SMALL_FILE);
 //    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
@@ -46,13 +48,15 @@ int main(int argc, char **argv) {
 //    a.add<int>("nb_cols", '2', "Number of columns in the matrix A", false, 0);
 //    a.add<int>("nz", '3', "Number of non-zero values in the matrix A",false, 0);
 //    //Matrix B
+////    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
+////            false, "/home/filou/b.txt");
 //    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
 //            false, cst::RHS_WATER_MPHASE_SMALL_FILE);
 //    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
 //    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-//            false, parm::A_DISTR_ANALYSIS, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+//            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_CENTRALIZED, 
 //            parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
 //    a.add<std::string>("A_loc", '0', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
 //            false, cst::A_WATER_MPHASE_SMALL_FILE_LOC2);
@@ -277,17 +281,17 @@ int main(int argc, char **argv) {
     std::string output_file = a.get<std::string>("output_file") + suffix;
     std::string error_file = a.get<std::string>("error_file") + suffix;
     //Redirect outputs
-//    if (fortran_output.compare(suffix)) {
-        FILE *f = freopen(fortran_output.c_str(), "a", stdout);
-//    }
-    std::ofstream coutstr(output_file, std::ofstream::app);
-//    if (output_file.compare(suffix)) {
-        std::cout.rdbuf(coutstr.rdbuf());
-//    }
-    std::ofstream cerrstr(error_file, std::ofstream::app);
-//    if (error_file.compare(cst::EMPTY_FILE)) {
-        std::cerr.rdbuf(cerrstr.rdbuf());
-//    }
+////    if (fortran_output.compare(suffix)) {
+//        FILE *f = freopen(fortran_output.c_str(), "a", stdout);
+////    }
+//    std::ofstream coutstr(output_file, std::ofstream::app);
+////    if (output_file.compare(suffix)) {
+//        std::cout.rdbuf(coutstr.rdbuf());
+////    }
+//    std::ofstream cerrstr(error_file, std::ofstream::app);
+////    if (error_file.compare(cst::EMPTY_FILE)) {
+//        std::cerr.rdbuf(cerrstr.rdbuf());
+////    }
 
 
     ////////////////////////////////////////////////////

@@ -47,14 +47,17 @@ Mumps::~Mumps() {
 ////////////////////////////////////////////////////  
 
 void Mumps::assemble_A() {
+    _id.irn=NULL;
+    _id.jcn=NULL;
+    _id.a=NULL;
     // Gather all local nz in an array
-    int *recvcounts;
+    int *recvcounts=NULL;
     if (is_host())
         recvcounts = new int[_nb_procs];
     MPI_Gather(&_id.nz_loc, 1, MPI_INT, recvcounts, 1, MPI_INT, cst::HOST_ID,
             MPI_COMM_WORLD);
     // The displacements of the gather are the same as the receive counts
-    int *displs;
+    int *displs=NULL;
     if (is_host()) {
         displs = new int[_nb_procs];
         int i;
@@ -66,13 +69,6 @@ void Mumps::assemble_A() {
         _id.irn=new int[_id.nz];
         _id.jcn=new int[_id.nz];
         _id.a=new double[_id.nz];
-    }
-    else {
-        recvcounts = NULL;
-        displs = NULL;
-        _id.irn=NULL;
-        _id.jcn=NULL;
-        _id.a=NULL;
     }
     MPI_Gatherv(_id.irn_loc, _id.nz_loc, MPI_INT, _id.irn, recvcounts, displs,
         MPI_INT, cst::HOST_ID, MPI_COMM_WORLD);
@@ -328,15 +324,14 @@ void Mumps::init() {
     mumps(parm::JOB_INIT);
     
     // Display initialized OpenMP
-    int nthreads, tid;
-    #pragma omp parallel private(tid)
+    #pragma omp parallel
     {
         /* Obtain and print thread id */
-       	tid = omp_get_thread_num();
-        std::clog << "Initialisation of OpenMP thread = " << tid << " on cpu " << sched_getcpu() << "\n";
+       	_tid = omp_get_thread_num();
+        std::clog << "Initialisation of OpenMP thread = " << _tid << " on cpu " << sched_getcpu() << "\n";
         /* Only master thread does this */
         _nthreads = omp_get_num_threads();
-        if (tid == 0) {
+        if (_tid == 0) {
             std::clog << "Number of OpenMP threads = " << _nthreads << "\n";
         }  /* All threads join master thread and terminate */
     }

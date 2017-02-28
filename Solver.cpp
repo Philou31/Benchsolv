@@ -117,7 +117,7 @@ void Solver::get_MM(std::string file, int &m, int &n, int &nz, double **values,
             stream >> *(*values+iii);
             ++iii;
             // On the host: output every 10% of the matrix read
-            if (is_host() && iii%(size/10)==0) {
+            if (is_host() && size >= 10 && iii%(size/10)==0) {
                 ++kkk;
                 std::clog << kkk*10 << "% loaded...\n";
             }
