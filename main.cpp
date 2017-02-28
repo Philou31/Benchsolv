@@ -277,17 +277,17 @@ int main(int argc, char **argv) {
     std::string output_file = a.get<std::string>("output_file") + suffix;
     std::string error_file = a.get<std::string>("error_file") + suffix;
     //Redirect outputs
-    if (fortran_output.compare(suffix)) {
+//    if (fortran_output.compare(suffix)) {
         FILE *f = freopen(fortran_output.c_str(), "a", stdout);
-    }
+//    }
     std::ofstream coutstr(output_file, std::ofstream::app);
-    if (output_file.compare(suffix)) {
+//    if (output_file.compare(suffix)) {
         std::cout.rdbuf(coutstr.rdbuf());
-    }
+//    }
     std::ofstream cerrstr(error_file, std::ofstream::app);
-    if (error_file.compare(cst::EMPTY_FILE)) {
+//    if (error_file.compare(cst::EMPTY_FILE)) {
         std::cerr.rdbuf(cerrstr.rdbuf());
-    }
+//    }
 
 
     ////////////////////////////////////////////////////

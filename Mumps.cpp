@@ -51,8 +51,6 @@ void Mumps::assemble_A() {
     int *recvcounts;
     if (is_host())
         recvcounts = new int[_nb_procs];
-    else recvcounts = NULL;
-    std::clog << "BLABLA1\n";
     MPI_Gather(&_id.nz_loc, 1, MPI_INT, recvcounts, 1, MPI_INT, cst::HOST_ID,
             MPI_COMM_WORLD);
     // The displacements of the gather are the same as the receive counts
@@ -70,20 +68,18 @@ void Mumps::assemble_A() {
         _id.a=new double[_id.nz];
     }
     else {
+        recvcounts = NULL;
         displs = NULL;
         _id.irn=NULL;
         _id.jcn=NULL;
         _id.a=NULL;
     }
-    std::clog << "BLABLA2\n";
     MPI_Gatherv(_id.irn_loc, _id.nz_loc, MPI_INT, _id.irn, recvcounts, displs,
         MPI_INT, cst::HOST_ID, MPI_COMM_WORLD);
     MPI_Gatherv(_id.jcn_loc, _id.nz_loc, MPI_INT, _id.jcn, recvcounts, displs,
         MPI_INT, cst::HOST_ID, MPI_COMM_WORLD);
-    std::clog << "BLABLA3\n";
     MPI_Gatherv(_id.a_loc, _id.nz_loc, MPI_DOUBLE, _id.a, recvcounts, displs,
         MPI_DOUBLE, cst::HOST_ID, MPI_COMM_WORLD);
-    std::clog << "BLABLA4\n";
     _A_assembled=true;
     if (is_host()) {
         delete[] recvcounts;
@@ -339,9 +335,9 @@ void Mumps::init() {
        	tid = omp_get_thread_num();
         std::clog << "Initialisation of OpenMP thread = " << tid << " on cpu " << sched_getcpu() << "\n";
         /* Only master thread does this */
+        _nthreads = omp_get_num_threads();
         if (tid == 0) {
-            nthreads = omp_get_num_threads();
-            std::clog << "Number of OpenMP threads = " << nthreads << "\n";
+            std::clog << "Number of OpenMP threads = " << _nthreads << "\n";
         }  /* All threads join master thread and terminate */
     }
     
@@ -355,10 +351,18 @@ void Mumps::init() {
     // Default options
     if (is_host())
         std::cout << "\nDefault options:\n";
-    set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_PAR);
-    set_opt(parm::SYMPERM_PAR, parm::SYMPERM_PARAUTO);
+    // Force sequential behaviour if only one process
+    if (_nb_procs == 1)
+        _id.par = parm::A_CENTRALIZED;
+    if (_nb_procs * _nthreads == 1) {
+        set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_SEQ);
+        set_opt(parm::SYMPERM_SEQ, parm::SYMPERM_SEQAUTO);
+    } else {
+        set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_PAR);
+        set_opt(parm::SYMPERM_PAR, parm::SYMPERM_PARAUTO);
+    }
     set_opt(parm::NULL_PIVOT, parm::NULL_PIVOT_YES);
-    set_opt(parm::SCALING, parm::SCALE_ANALYSIS);
+    set_opt(parm::SCALING, parm::SCALE_AUTO);
     if (is_host() && parm::MEMORY_PERCENT_INC != 0)
         set_opt(parm::MEMORY_PERCENT_INC, parm::MEMORY_DEFAULT_PERCENT_INC);
     

@@ -26,6 +26,7 @@ private:
     DMUMPS_STRUC_C _id; // MUMPS data structure
     MPI_Comm _mpi_comm; // MPI communicator
     int _nb_procs = 1, _proc_id = 0; // #MPI and id MPI
+    int _nthreads = 1;  // #OpenMP
     double *_r; // residual array
     Metrics _metrics;   // object computing metrics using QR_Mumps structure
     // Problem specific info
