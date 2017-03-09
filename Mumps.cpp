@@ -342,27 +342,19 @@ void Mumps::solve() {
 
 void Mumps::metrics() {
     // If distributed matrix, assemble on host
-    std::clog << "MWAHA1\n";
     if (_distr == parm::A_DISTR_ANALYSIS && !_A_assembled) {
-        std::clog << "MWAHA\n";
         if (is_host())
             deallocate_A();
-        std::clog << "MWAHA\n";
         assemble_A();
     }
-    std::clog << "MWAHA2\n";
     // Compute metrics on host
     if (is_host()) {
         alloc_solve_residual();
-    std::clog << "MWAHA3\n";
         _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
             _id.rhs, _r);
-    std::clog << "MWAHA4\n";
         _metrics.compute_metrics(_rnrm, _onrm, _anrm, _xnrm, _bnrm);
-    std::clog << "MWAHA5\n";
         delete[] _r;
     }
-    std::clog << "MWAHA6\n";
 }
 
 void Mumps::finalize() {

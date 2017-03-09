@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
 //    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-//            false, parm::A_DISTR_FACTO_MAPPING, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+//            false, parm::A_DISTR_ANALYSIS, cmdline::oneof<int>(parm::A_CENTRALIZED, 
 //            parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
 //    a.add<std::string>("A_loc", '0', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
 //            false, cst::A_WATER_MPHASE_SMALL_FILE_LOC2);
