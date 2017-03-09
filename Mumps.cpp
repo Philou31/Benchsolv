@@ -73,8 +73,6 @@ void Mumps::assemble_A() {
         _id.jcn=new int[_id.nz];
         _id.a=new double[_id.nz];
     }
-//    std::cout << typeid (_id.irn_loc).name() << "IT\n";
-//    std::cout << typeid (_id.a_loc).name() << "VALUES\n";
     MPI_Gatherv(_id.irn_loc, _id.nz_loc, MPI_INT, _id.irn, recvcounts, displs,
         MPI_INT, cst::HOST_ID, MPI_COMM_WORLD);
     MPI_Gatherv(_id.jcn_loc, _id.nz_loc, MPI_INT, _id.jcn, recvcounts, displs,
@@ -285,19 +283,12 @@ void Mumps::init() {
     // Display initialized OpenMP
     init_OpenMP();
     
-    // Distribution and format
-    if (is_host()) {
-        std::cout << "Setting distribution and format:\n";
-        set_opt(parm::A_FORMAT, _format);
-        set_opt(parm::A_DISTRIBUTION, _distr);
-    }
-    
     // Default options
     if (is_host())
         std::cout << "\nDefault options:\n";
     // Force sequential behaviour if only one process
     if (_nb_procs == 1)
-        _id.par = parm::A_CENTRALIZED;
+        _distr = parm::A_CENTRALIZED;
     if (_nb_procs * _nthreads == 1) {
         set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_SEQ);
         set_opt(parm::SYMPERM_SEQ, parm::SYMPERM_SEQAUTO);
@@ -317,6 +308,12 @@ void Mumps::init() {
         set_opt(_opt_key, _opt_value);
     }
     
+    // Distribution and format
+    if (is_host()) {
+        std::cout << "Setting distribution and format:\n";
+        set_opt(parm::A_FORMAT, _format);
+        set_opt(parm::A_DISTRIBUTION, _distr);
+    }
     //Test ID
     if (is_host())
         std::clog << "TEST ID: " << _test_id << "\n";
@@ -345,19 +342,27 @@ void Mumps::solve() {
 
 void Mumps::metrics() {
     // If distributed matrix, assemble on host
+    std::clog << "MWAHA1\n";
     if (_distr == parm::A_DISTR_ANALYSIS && !_A_assembled) {
+        std::clog << "MWAHA\n";
         if (is_host())
             deallocate_A();
+        std::clog << "MWAHA\n";
         assemble_A();
     }
+    std::clog << "MWAHA2\n";
     // Compute metrics on host
     if (is_host()) {
         alloc_solve_residual();
+    std::clog << "MWAHA3\n";
         _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
             _id.rhs, _r);
+    std::clog << "MWAHA4\n";
         _metrics.compute_metrics(_rnrm, _onrm, _anrm, _xnrm, _bnrm);
+    std::clog << "MWAHA5\n";
         delete[] _r;
     }
+    std::clog << "MWAHA6\n";
 }
 
 void Mumps::finalize() {
