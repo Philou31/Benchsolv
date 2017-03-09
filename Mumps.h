@@ -25,10 +25,6 @@ class Mumps : public Solver {
 private:
     DMUMPS_STRUC_C _id; // MUMPS data structure
     MPI_Comm _mpi_comm; // MPI communicator
-    int _nb_procs = 1, _proc_id = 0; // #MPI and id MPI
-    int _nthreads = 1;  // #OpenMP
-    int _tid;   // OpenMP thread id
-    double *_r; // residual array
     Metrics _metrics;   // object computing metrics using QR_Mumps structure
     // Problem specific info
     std::string _pb_spec_file;  // File for the metrics specific to a matrix
@@ -85,19 +81,11 @@ public:
     ////////////////////////////////////////////////////
     // MPI communication methods
     ////////////////////////////////////////////////////
-    //!
-    //! \fn assemble_A()
-    //! \brief Assemble the matrix A on the host from the local parts
-    //!
-    //! This function will assemble on the host the local parts of the matrix A
-    //! to obtain the global matrix arrays (rows, columns, values). Caution:
-    //! this can be computationaly heavy.
-    //!
-    void assemble_A();
+    virtual void assemble_A() override;
     
-    virtual bool is_host() override;
-    virtual long long total_time(long long *t) override;
-    
+////    virtual bool is_host() override;
+//    virtual long long total_time(long long *t) override;
+//    
     ////////////////////////////////////////////////////
     // MATRIX INPUT
     ////////////////////////////////////////////////////
@@ -141,44 +129,14 @@ public:
     //! chosen distribution
     //! TODO DOCUMENTATION
     //!
-    void get_A_loc();
+    void read_A_loc();
     
     virtual bool take_A_value_loc(int m, int n, int i, bool local) override;
-    virtual int nz_loc(int nz, bool local) override;
-    virtual void get_A() override;
-    virtual void get_A_again() override;
-    virtual void get_b() override;
-    virtual void get_b_again() override;
-    
-    ////////////////////////////////////////////////////
-    // MATRIX OUTPUT
-    ////////////////////////////////////////////////////
-    //!
-    //! \fn void display_A_loc(int n)
-    //! \brief Display part of the local part of the distributed matrix A
-    //!
-    //! This function display n lines/non-zero values of the local part of the 
-    //! distributed matrix A using the display_ass method.
-    //! Per line: "row column value"
-    //!
-    //! \param n: number of lines/non-zero values to display
-    //!
-    void display_A_loc(int n);
-    
-    //!
-    //! \fn void display_A_loc(int n)
-    //! \brief Display the local part of the distributed matrix A
-    //!
-    //! This function display all lines/non-zero values of the local part of the 
-    //! distributed matrix A using the display_ass method.
-    //! Per line: "row column value"
-    //!
-    void display_A_loc();
-    
-    virtual void display_A(int n) override;
-    virtual void display_A() override;
-    virtual void display_b(int n) override;
-    virtual void display_b() override;
+    virtual int read_nz_loc(int nz, bool local) override;
+    virtual void read_A() override;
+    virtual void read_A_again() override;
+    virtual void read_b() override;
+    virtual void read_b_again() override;
     
     ////////////////////////////////////////////////////
     // RUNNING THE SOLVER
@@ -216,11 +174,10 @@ public:
     
     virtual void init() override;
     virtual void analyse() override;
-    virtual bool get_b_before_facto() override;
+    virtual bool read_b_before_facto() override;
     virtual void factorize() override;
     virtual void solve() override;
     virtual void metrics() override;
-    virtual void call() override;
     virtual void finalize() override;
     
     ////////////////////////////////////////////////////
@@ -251,6 +208,23 @@ public:
         long long tf = 0, long long ts = 0, std::string key = "",
         std::string value = "") override;
     virtual void set_no_output() override;
+
+    ////////////////////////////////////////////////////
+    // GETTERS
+    ////////////////////////////////////////////////////
+    virtual int get_m() override;
+    virtual int get_n() override;
+    virtual int get_nz() override;
+    virtual int get_nz_loc() override;
+    virtual double* get_a() override;
+    virtual double* get_a_loc() override;
+    virtual int* get_irn() override;
+    virtual int* get_irn_loc() override;
+    virtual int* get_jcn() override;
+    virtual int* get_jcn_loc() override;
+    virtual double* get_rhs() override;
+    virtual double* get_x() override;
+    virtual double* get_r() override;
 };
 
 #endif /* MUMPS_H */

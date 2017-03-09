@@ -83,6 +83,23 @@ public:
     //! \param onrm: norm of the orthogonal residual
     //!
     void residual_orth(double &onrm);
+    
+    //!
+    //! \fn compute_metrics(double rnrm, double onrm, double anrm, double xnrm, 
+    //!     double bnrm)
+    //! \brief Compute the different metrics
+    //!
+    //! This method will compute all the different metrics:
+    //!     - norm of A
+    //!     - norm of b
+    //!     - norm of the solution
+    //!     - norm of the residual r=Ax-b
+    //!     - norm of the orthogonal residual: ||A'r||/||r||
+    //!
+    //! \param onrm: norm of the orthogonal residual
+    //!
+    void compute_metrics(double &rnrm, double &onrm, double &anrm, double &xnrm, 
+        double &bnrm);
 };
 
 #endif /* METRICS_H */

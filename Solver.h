@@ -6,8 +6,8 @@
 //!
 //! This is an abstract class (some methods implemented) for the solver classes 
 //! implemented by Mumps, QR_Mumps,... It implements only common functions:
-//!     - Input matrix: get_MM
-//!     - Output matrix: display_ass
+//!     - Input matrix: read_MM
+//!     - Output matrix: display...
 //!
 
 #ifndef SOLVER_H
@@ -35,6 +35,10 @@ protected:
     // Norm of the residual, orthogonal residual, A, b and the solution
     double _rnrm{0}, _onrm{0}, _anrm{0}, _bnrm{0}, _xnrm{0};
     int _nrows, _ncols, _nz = 0;    // number of rows, columns and non-zero in A
+    int _nb_procs = 1, _proc_id = 0; // #MPI and id MPI
+    int _nthreads = 1, _tid = 0;  // #OpenMP and thread id
+    bool _A_assembled=false;    // true if A is assembled on host
+    double *_r; // residual array
 public:
     //!
     //! \brief Constructor of the Solver abstract class
@@ -51,18 +55,69 @@ public:
     //!
     Solver(std::string test_id, std::string file_A, bool n_present_A, 
         std::string file_b, bool n_present_b, int nrows, int ncols, int nz);
-    
+
+    virtual void base_destruct();
     
     ////////////////////////////////////////////////////
     // MPI communication methods
     ////////////////////////////////////////////////////
+    //!
+    //! \fn init_MPI()
+    //! \brief Initialize and display MPI number of proc and id
+    //!
+    //! \param comm: the MPI communicator
+    //!
+    virtual void init_MPI(MPI_Comm &comm);
+    
+    //!
+    //! \fn finalize_MPI()
+    //! \brief Finalize MPI
+    //!
+    virtual void finalize_MPI();
+    
+    //!
+    //! \fn init_OpenMP()
+    //! \brief Initialize and display OpenMP nthreads and id
+    //!
+    virtual void init_OpenMP();
+//    
+//    //!
+//    //! \fn assemble_MM()
+//    //! \brief Assemble a Matrix Market on the host from the local parts
+//    //!
+//    //! This function will assemble on the host the local parts of a Matrix
+//    //! Market structure to obtain the global matrix arrays (rows, columns, 
+//    //! values). Caution: this can be heavy on memory.
+//    //!
+//    //! \param nz: number of non-zero values
+//    //! \param values: pointer to the array of non-zero values
+//    //! \param indexes: vector of pointers to the arrays of row and column index
+//    //! \param nz_loc: number of local non-zero values
+//    //! \param values_loc: pointer to the local array of non-zero values
+//    //! \param indexes_loc: vector of pointers to the local arrays of row and column index
+//    //! \param comm: the MPI communicator
+//    //!
+//    void assemble_MM(int nz, double **values, 
+//        std::vector<int**> indexes, int nz_loc, double **values_loc, 
+//        std::vector<int**> indexes_loc, MPI_Comm comm);
+//    
+    //!
+    //! \fn assemble_A()
+    //! \brief Assemble the matrix A on the host from the local parts
+    //!
+    //! This function will assemble on the host the local parts of the matrix A
+    //! to obtain the global matrix arrays (rows, columns, values). Caution:
+    //! this can be computationaly heavy.
+    //!
+    virtual void assemble_A();
+    
     //!
     //! \fn bool is_host()
     //! \brief Check if the current process is the host (id=0)
     //!
     //! \return true if the process is the host
     //!
-    virtual bool is_host();
+    bool is_host();
     
     //!
     //! \fn long long total_time(long long *t)
@@ -73,9 +128,10 @@ public:
     //! return the total time.
     //!
     //! \param t: the local execution time
+    //! \param comm: the MPI communicator
     //! \return the summed, total execution time
     //!
-    virtual long long total_time(long long *t);
+    long long total_time(long long *t, MPI_Comm comm);
     
     ////////////////////////////////////////////////////
     // MATRIX INPUT
@@ -98,7 +154,7 @@ public:
     virtual bool take_A_value_loc(int m, int n, int i, bool local);
     
     //!
-    //! \fn int nz_loc(int nz, bool local)
+    //! \fn int read_nz_loc(int nz, bool local)
     //! \brief Returns the local number of non-zero values
     //!
     //! For distributed matrices, this function returns the local number
@@ -110,10 +166,10 @@ public:
     //! \param local: true if the input matrix is distributed
     //! \return the local number of non-zeros
     //!
-    virtual int nz_loc(int nz, bool local);
+    virtual int read_nz_loc(int nz, bool local);
 
     //!
-    //! \fn get_MM(std::string file, int &m, int &n, int &nz, 
+    //! \fn read_MM(std::string file, int &m, int &n, int &nz, 
     //!    double **values, std::vector<int**> indexes, bool n_present, bool rhs, 
     //!    bool local=false)
     //! \brief Read a matrix in Matrix Market format
@@ -131,24 +187,24 @@ public:
     //! \param rhs: true if we are reading a right hand side
     //! \param local: true if the input matrix is distributed
     //!
-    void get_MM(std::string file, int &m, int &n, int &nz, 
+    void read_MM(std::string file, int &m, int &n, int &nz, 
         double **values, std::vector<int**> indexes, bool n_present, bool rhs, 
         bool local=false);
     
     //!
-    //! \fn void get_A()
+    //! \fn void read_A()
     //! \brief Read the input matrix
     //!
-    //! Use the method get_MM(...) with the attribute _file_A in parameter. This
+    //! Use the method read_MM(...) with the attribute _file_A in parameter. This
     //! will have a different behaviour depending on the input matrix:
     //!     - Distributed ?
     //!     - Host ?
     //!
-    virtual void get_A() = 0;
+    virtual void read_A() = 0;
     
     //!
-    //! \fn void get_A_again()
-    //! \brief deallocate and get the matrix A again using get_MM
+    //! \fn void read_A_again()
+    //! \brief deallocate and get the matrix A again using read_MM
     //!
     //! This function deallocate then reads again the matrix A. It is useful in 
     //! a context where:
@@ -156,26 +212,26 @@ public:
     //!     - A is not read at the solver initialization but later
     //!     - A has a special treatment such as distributed matrix,...
     //!
-    virtual void get_A_again();
+    virtual void read_A_again();
     
     //!
-    //! \fn void get_b()
+    //! \fn void read_b()
     //! \brief Read the input right hand side
     //!
-    //! Use the method get_MM(...) with the attribute _file_b in parameter to
+    //! Use the method read_MM(...) with the attribute _file_b in parameter to
     //! read the right hand side on the host only. If the attribute _file_b is
     //! empty, the right hand side is initialized with all 1 values.
     //!
-    virtual void get_b() = 0;
+    virtual void read_b() = 0;
     
     //!
-    //! \fn void get_b_again()
-    //! \brief deallocate and get the matrix b again using get_A_loc
+    //! \fn void read_b_again()
+    //! \brief deallocate and get the matrix b again using read_b
     //!
     //! This function deallocate then reads again the right hand side b. It is 
     //! useful in a context where b is modified during a step (typically solve).
     //!
-    virtual void get_b_again();
+    virtual void read_b_again();
 
     
     ////////////////////////////////////////////////////
@@ -207,7 +263,7 @@ public:
     //!
     //! \param n: number of lines/non-zero values to display
     //!
-    virtual void display_A(int n) = 0;
+    virtual void display_A(int n);
     
     //!
     //! \fn void display_A(int n)
@@ -216,7 +272,28 @@ public:
     //! This function display all lines/non-zero values of the system matrix A
     //! using the display_ass method. Per line: "row column value"
     //!
-    virtual void display_A() = 0;
+    virtual void display_A();
+    //!
+    //! \fn void display_A_loc(int n)
+    //! \brief Display part of the local part of the distributed matrix A
+    //!
+    //! This function display n lines/non-zero values of the local part of the 
+    //! distributed matrix A using the display_ass method.
+    //! Per line: "row column value"
+    //!
+    //! \param n: number of lines/non-zero values to display
+    //!
+    virtual void display_A_loc(int n);
+    
+    //!
+    //! \fn void display_A_loc(int n)
+    //! \brief Display the local part of the distributed matrix A
+    //!
+    //! This function display all lines/non-zero values of the local part of the 
+    //! distributed matrix A using the display_ass method.
+    //! Per line: "row column value"
+    //!
+    virtual void display_A_loc();
     
     //!
     //! \fn void display_b(int n)
@@ -227,7 +304,7 @@ public:
     //!
     //! \param n: number of lines/non-zero values to display
     //!
-    virtual void display_b(int n) = 0;
+    virtual void display_b(int n);
     
     //!
     //! \fn void display_A(int n)
@@ -236,7 +313,7 @@ public:
     //! This function display all lines/non-zero values of the right hand side b
     //! using the display_ass method. Per line: "value"
     //!
-    virtual void display_b() = 0;
+    virtual void display_b();
     
     //!
     //! \fn void display_x(int n)
@@ -283,6 +360,12 @@ public:
     // RUNNING THE SOLVER
     ////////////////////////////////////////////////////
     //!
+    //! \fn void base_construct()
+    //! \brief Initialize solver and get matrices
+    //!
+    virtual void base_construct();
+    
+    //!
     //! \fn void init()
     //! \brief Initialize the Solver
     //!
@@ -304,7 +387,7 @@ public:
     virtual void analyse() = 0;
     
     //!
-    //! \fn bool get_b_before_facto()
+    //! \fn bool read_b_before_facto()
     //! \brief Returns true if b should be read again before factorization
     //!
     //! This function will check if an option in the solver makes reading the
@@ -315,7 +398,7 @@ public:
     //!
     //! \return true if the right hand side should be read again before facto
     //!
-    virtual bool get_b_before_facto() = 0;
+    virtual bool read_b_before_facto();
     
     //!
     //! \fn void factorize()
@@ -351,7 +434,7 @@ public:
     //! \fn void call()
     //! \brief Run at once analysis, factorization, solve and metrics.
     //!
-    virtual void call() = 0;
+    virtual void call();
     
     //!
     //! \fn void finalize()
@@ -370,6 +453,22 @@ public:
     ////////////////////////////////////////////////////
     // (DE)ALLOCATION
     ////////////////////////////////////////////////////
+    //!
+    //! \fn void alloc_array()
+    //! \brief Allocate an array of double
+    //!
+    //! This method allocate an array of double values. You can either copy
+    //! another array of allocate an array of the same value.
+    //!
+    //! \param n: size of the array to allocate
+    //! \param array: array to allocate
+    //! \param copy_array: if true, array=copy of to_copy, else array=all value
+    //! \param to_copy: array to be copied
+    //! \param value: if not copy_array, the allocated array is filled of value
+    //!
+    void alloc_array(int n, double **array, bool copy_array=false,
+        double *to_copy=NULL, double value=1);
+
     //!
     //! \fn void alloc_solve_residual()
     //! \brief Allocate the residual array
@@ -410,6 +509,41 @@ public:
     ////////////////////////////////////////////////////
     // OUTPUTS
     ////////////////////////////////////////////////////
+    //!
+    //! \fn void base_output_metrics_init(std::string file)
+    //! \brief Initialize the common solution specific metrics file
+    //!
+    //! This function will initialize the file for the solution specific metrics
+    //! (norm of the residual, computation time,...) outputting the 
+    //! tab-delimited metrics names in the file header. This method corresponds
+    //! to metrics common to all solvers.
+    //!
+    //! \param file
+    //!
+    void base_output_metrics_init(std::string file);
+    
+    //!
+    //! \fn void base_output_metrics(std::string sol_spec_file, long long ta = 0, 
+    //!     long long tf = 0, long long ts = 0, long long ta_tot = 0, 
+    //!     long long tf_tot = 0, long long ts_tot = 0, std::string key = "",
+    //!     std::string value = "")
+    //! \brief Output the common solution specific metrics
+    //!
+    //! This function will output all the metrics specific to the solution found
+    //! in a tab-delimited form in the file. The computation times are given
+    //! by the Benchmark class calling this function. This method corresponds
+    //! to metrics common to all solvers.
+    //!
+    //! \param sol_spec_file
+    //! \param ta: analysis computation time
+    //! \param tf: factorization computation time
+    //! \param ts: solve computation time
+    //! \param key: key of the current option key tested
+    //! \param value: value of the current option tested
+    //! \param comm: the MPI communicator
+    //!
+    void base_output_metrics(std::string sol_spec_file, MPI_Comm comm, 
+        long long ta = 0, long long tf = 0, long long ts = 0);
     //!
     //! \fn void output_metrics_init(std::string file)
     //! \brief Initialize the solution specific metrics file
@@ -480,6 +614,87 @@ public:
 //        if (is_host())
 //            out(std::cerr, args...);
 //    }
+
+    ////////////////////////////////////////////////////
+    // GETTERS
+    ////////////////////////////////////////////////////
+    //!
+    //! \fn int get_m()
+    //! \brief get number of equations
+    //!
+    virtual int get_m() = 0;
+    
+    //!
+    //! \fn int get_n()
+    //! \brief get number of variables
+    //!
+    virtual int get_n() = 0;
+    
+    //!
+    //! \fn int get_nz()
+    //! \brief get number of non-zero values
+    //!
+    virtual int get_nz() = 0;
+    
+    //!
+    //! \fn int get_nz_loc()
+    //! \brief get number of local non-zero values
+    //!
+    virtual int get_nz_loc() = 0;
+    
+    //!
+    //! \fn double* get_a()
+    //! \brief get array of non-zero values
+    //!
+    virtual double* get_a() = 0;
+    
+    //!
+    //! \fn double* get_a_loc()
+    //! \brief get array of local non-zero values
+    //!
+    virtual double* get_a_loc() = 0;
+    
+    //!
+    //! \fn int* get_irn()
+    //! \brief get array of row indices
+    //!
+    virtual int* get_irn() = 0;
+    
+    //!
+    //! \fn int* get_irn_loc()
+    //! \brief get array of local row indices
+    //!
+    virtual int* get_irn_loc() = 0;
+    
+    //!
+    //! \fn int* get_jcn()
+    //! \brief get array of column indices
+    //!
+    virtual int* get_jcn() = 0;
+    
+    //!
+    //! \fn int* get_jcn_loc()
+    //! \brief get array of local column indices
+    //!
+    virtual int* get_jcn_loc() = 0;
+    
+    //!
+    //! \fn double* get_b()
+    //! \brief get array of right hand side
+    //!
+    virtual double* get_rhs() = 0;
+    
+    //!
+    //! \fn double* get_x()
+    //! \brief get array of the solution
+    //!
+    virtual double* get_x() = 0;
+    
+    //!
+    //! \fn double* get_r()
+    //! \brief get array of the residual
+    //!
+    virtual double* get_r() = 0;
 };
 
 #endif /* SOLVER_H */

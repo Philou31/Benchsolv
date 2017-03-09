@@ -18,9 +18,9 @@ extern "C" {
 
 class QR_Mumps: public Solver {
 private:
-    dqrm_spmat_type_c _qrm_mat; // QR_Mumps data structure
+    dqrm_spmat_type_c _id; // QR_Mumps data structure
     char _transp{'n'};  // The matrix is to be used transposed or not
-    double *_x, *_r, *_b;   // solution, residual and right hand side arrays
+    double *_x, *_b;   // solution, residual and right hand side arrays
     int _nrhs{1};   // number of right hand sides
     std::string _opt_key;   // Key of the option to test
     int _opt_value; // Value of the option to test
@@ -44,20 +44,8 @@ public:
     ////////////////////////////////////////////////////
     // MATRIX INPUT
     ////////////////////////////////////////////////////
-    virtual void get_A() override;
-    virtual void get_b() override;
-    
-    ////////////////////////////////////////////////////
-    // MATRIX OUTPUT
-    ////////////////////////////////////////////////////
-    virtual void display_A(int n) override;
-    virtual void display_A() override;
-    virtual void display_x(int n) override;
-    virtual void display_x() override;
-    virtual void display_b(int n) override;
-    virtual void display_b() override;
-    virtual void display_r(int n) override;
-    virtual void display_r() override;
+    virtual void read_A() override;
+    virtual void read_b() override;
     
     ////////////////////////////////////////////////////
     // RUNNING THE SOLVER
@@ -88,11 +76,9 @@ public:
     
     virtual void init() override;
     virtual void analyse() override;
-    virtual bool get_b_before_facto() override;
     virtual void factorize() override;
     virtual void solve() override;
     virtual void metrics() override;
-    virtual void call() override;
     virtual void finalize() override;
     
     ////////////////////////////////////////////////////
@@ -111,6 +97,23 @@ public:
         long long tf = 0, long long ts = 0, std::string key = "",
         std::string value = "") override;
     virtual void set_no_output() override;
+
+    ////////////////////////////////////////////////////
+    // GETTERS
+    ////////////////////////////////////////////////////
+    virtual int get_m() override;
+    virtual int get_n() override;
+    virtual int get_nz() override;
+    virtual int get_nz_loc() override;
+    virtual double* get_a() override;
+    virtual double* get_a_loc() override;
+    virtual int* get_irn() override;
+    virtual int* get_irn_loc() override;
+    virtual int* get_jcn() override;
+    virtual int* get_jcn_loc() override;
+    virtual double* get_rhs() override;
+    virtual double* get_x() override;
+    virtual double* get_r() override;
 };
 
 

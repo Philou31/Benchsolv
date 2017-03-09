@@ -1,15 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Benchmark_Impl.h
- * Author: filou
- *
- * Created on 15 novembre 2016, 10:33
- */
+//! \file Benchmark.h
+//! \brief Benchmark class
+//! \author filou
+//! \version 0.1
+//! \date 22/10/2016, 18:42
+//!
+//! Benchmark is the class manipulating the Solvers. We can launch the test via
+//! the run method of this class.
+//!
 
 #ifndef BENCHMARK_IMPL_H
 #define BENCHMARK_IMPL_H
@@ -196,9 +193,9 @@ bool Benchmark<S,K,V>::iterate_solver(std::string file, bool a,
         // TODOMAYBE: For compatibility with other solvers, do the following
         // inside Mumps ?
         if (!_got_b) {
-            bool before_facto=_solver->get_b_before_facto();
-            if (f && before_facto) _solver->get_b_again();
-            if (s && !before_facto) _solver->get_b_again();
+            bool before_facto=_solver->read_b_before_facto();
+            if (f && before_facto) _solver->read_b_again();
+            if (s && !before_facto) _solver->read_b_again();
         }
         // call the solver on phases in arguments
         call(a, f, s, o);
@@ -265,7 +262,7 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
         // factorization (facto or mapping distribution). But it only has to be 
         // read once (at each analysis ?????)
         if (!_got_A) {
-            _solver->get_A_again();
+            _solver->read_A_again();
             _got_A=true;
         }
         phase(&Solver::factorize, cst::FACTORIZATION_PHASE, _tf);
@@ -324,5 +321,4 @@ void Benchmark<S,K,V>::multiple_benchmark() {
         std::cout << "\nNumber of benchmarks executed: " << _nb_tests << "\n";
 }
 
-#endif /* BENCHMARK_IMPL_H */
-
+#endif

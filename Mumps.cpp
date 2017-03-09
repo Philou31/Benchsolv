@@ -1,11 +1,14 @@
-//! \file functions.cpp
-//! \brief Functions for the project
+//! \file Mumps.h
+//! \brief Mumps class for the solver
 //! \author filou
 //! \version 0.1
-//! \date 13/11/2016, 18:42
+//! \date 22/10/2016, 18:42
+//!
+//! Class Mumps inheriting from/implementing methods of class Solver
 //!
 
 #include "Mumps.h"
+#include <typeinfo>
 
 Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A, 
         std::string file_b, bool n_present_b, int par, int sym, int distr, 
@@ -29,24 +32,24 @@ Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A,
         _mem_relax = mem_relax;
     if (_mem_factor != 1)
         _mem_factor = mem_factor;
-    init();
+    // Call init and get matrices
+    base_construct();
     set_opt(parm::ERR_ANALYSIS, erranal);
-    get_A();
-    get_b();
 }
 
 Mumps::~Mumps() {
-    deallocate_A();
-    deallocate_A_loc();
-    deallocate_b();
-    finalize();
+    base_destruct();
+    if (_distr != parm::A_CENTRALIZED)
+        deallocate_A_loc();
 }
-
-////////////////////////////////////////////////////
-// MPI communication methods
-////////////////////////////////////////////////////  
-
+//
+//////////////////////////////////////////////////////
+//// MPI communication methods
+//////////////////////////////////////////////////////
 void Mumps::assemble_A() {
+//    TODO: make it work
+//    assemble_MM(_id.nz, &_id.a, {&_id.irn, &_id.jcn}, _id.nz_loc, &_id.a_loc, 
+//        {&_id.irn_loc, &_id.jcn_loc}, _mpi_comm);
     _id.irn=NULL;
     _id.jcn=NULL;
     _id.a=NULL;
@@ -70,6 +73,8 @@ void Mumps::assemble_A() {
         _id.jcn=new int[_id.nz];
         _id.a=new double[_id.nz];
     }
+//    std::cout << typeid (_id.irn_loc).name() << "IT\n";
+//    std::cout << typeid (_id.a_loc).name() << "VALUES\n";
     MPI_Gatherv(_id.irn_loc, _id.nz_loc, MPI_INT, _id.irn, recvcounts, displs,
         MPI_INT, cst::HOST_ID, MPI_COMM_WORLD);
     MPI_Gatherv(_id.jcn_loc, _id.nz_loc, MPI_INT, _id.jcn, recvcounts, displs,
@@ -83,16 +88,6 @@ void Mumps::assemble_A() {
     }
 }
 
-bool Mumps::is_host() {
-    return _proc_id == cst::HOST_ID;
-}
-
-long long Mumps::total_time(long long *t) {
-    long long t_tot = 0;
-    MPI_Reduce(t, &t_tot, 1, MPI_LONG_LONG, MPI_SUM, cst::HOST_ID, _mpi_comm);
-    return t_tot;
-}
-    
 ////////////////////////////////////////////////////
 // MATRIX INPUT
 ////////////////////////////////////////////////////
@@ -188,7 +183,7 @@ bool Mumps::take_A_value_loc(int m, int n, int i, bool local) {
     return res;
 }
 
-int Mumps::nz_loc(int nz, bool local) {
+int Mumps::read_nz_loc(int nz, bool local) {
     if (!local) return nz;
     // If personal distribution, parse the distribution file
     if ((_distr == parm::A_DISTR_ANALYSIS || _distr == parm::A_DISTR_FACTO) &&
@@ -202,17 +197,17 @@ int Mumps::nz_loc(int nz, bool local) {
     return nz;
 }
 
-void Mumps::get_A_loc() {
+void Mumps::read_A_loc() {
     if (_distr == parm::A_CENTRALIZED) return;
     // If a personal distribution was provided or we use a mapping, use it to 
     // read the whole matrix file and save only the specific ones
     if (_loc != cst::EMPTY_FILE || _distr == parm::A_DISTR_FACTO_MAPPING) {
-        get_MM(_file_A, _id.n, _id.n, _id.nz_loc, &_id.a_loc, 
+        read_MM(_file_A, _id.n, _id.n, _id.nz_loc, &_id.a_loc, 
             {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false, true);
     }
     // Else a different file is given for each process with the suffix "_id"
     else
-        get_MM(_file_A + std::to_string(static_cast<long long>(_proc_id)), _id.n, _id.n, _id.nz_loc, 
+        read_MM(_file_A + std::to_string(static_cast<long long>(_proc_id)), _id.n, _id.n, _id.nz_loc, 
             &_id.a_loc, {&_id.irn_loc, &_id.jcn_loc}, _n_present_A, false, true);
     // Gather global nz from local nz
     MPI_Reduce(&_id.nz_loc, &_id.nz, 1, MPI_INT, MPI_SUM, cst::HOST_ID, _mpi_comm);
@@ -220,66 +215,39 @@ void Mumps::get_A_loc() {
         std::clog << "All fronts gathered, nz: " << _id.nz << "\n";
 }
 
-void Mumps::get_A() {
+void Mumps::read_A() {
     // If not matrix distributed (structure+values) before analysis, read entire
     // matrix on host
     if (_distr != parm::A_DISTR_ANALYSIS) {
         if (is_host())
-            get_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn},
+            read_MM(_file_A, _id.n, _id.n, _id.nz, &_id.a, {&_id.irn, &_id.jcn},
                 _n_present_A, false);
             _A_assembled=true;
     }
     // If matrix distributed (structure+values) before analysi, read local part 
     // in all processes, even host
-    else get_A_loc();
+    else read_A_loc();
 }
 
-void Mumps::get_A_again() {
+void Mumps::read_A_again() {
     if (_distr == parm::A_DISTR_FACTO_MAPPING || _distr == parm::A_DISTR_FACTO) {
         deallocate_A_loc();
-        get_A_loc();
+        read_A_loc();
     }
 }
 
-void Mumps::get_b_again() {
+void Mumps::read_b_again() {
     deallocate_b();
-    get_b();
+    read_b();
 }
 
-void Mumps::get_b() {
+void Mumps::read_b() {
     // On host read b in file or initialize with all 1 if empty
     if (is_host()) {
         if (_file_b.compare(cst::EMPTY_FILE))
-            get_MM(_file_b, _id.n, _id.n, _id.nz, &_id.rhs, {}, _n_present_b, true);
+            read_MM(_file_b, _id.n, _id.n, _id.nz, &_id.rhs, {}, _n_present_b, true);
         else alloc_rhs();
     }
-}
-    
-////////////////////////////////////////////////////
-// MATRIX OUTPUT
-////////////////////////////////////////////////////
-void Mumps::display_A_loc(int n) {
-    if (is_host()) display_ass(_id.a_loc, n, {_id.irn_loc, _id.jcn_loc});
-}
-
-void Mumps::display_A_loc() {
-    if (is_host()) display_ass(_id.a_loc, _id.nz_loc, {_id.irn_loc, _id.jcn_loc});
-}
-
-void Mumps::display_A(int n) {
-    if (is_host()) display_ass(_id.a, n, {_id.irn, _id.jcn});
-}
-
-void Mumps::display_A() {
-    if (is_host()) display_ass(_id.a, _id.nz, {_id.irn, _id.jcn});
-}
-
-void Mumps::display_b(int n) {
-    if (is_host()) display_ass(_id.rhs, n, {});    
-}
-
-void Mumps::display_b() {
-    if (is_host()) display_ass(_id.rhs, _id.n, {});
 }
     
 ////////////////////////////////////////////////////
@@ -308,33 +276,14 @@ void Mumps::set_opt(int key, int value, std::string sol_spec_file) {
 }
 
 void Mumps::init() {
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int namelen = 0;
-    
     // Initialize MPI
-    int ierr = MPI_Init (NULL, NULL);
-    ierr = MPI_Comm_size(_mpi_comm, &_nb_procs);
-    ierr = MPI_Comm_rank(_mpi_comm, &_proc_id);
-    ierr = MPI_Get_processor_name(processor_name, &namelen);
-    std::clog << "MPI initialization in Mumps, error code: " << ierr << "\n";
-    std::clog << "Running on CPU " << sched_getcpu() << " on node " << processor_name << "\n";
-    std::clog << "Proc id " << _proc_id << " on a total of " << _nb_procs << " procs\n\n";
+    init_MPI(_mpi_comm);
     
     // Initialize MUMPS
     mumps(parm::JOB_INIT);
     
     // Display initialized OpenMP
-    #pragma omp parallel
-    {
-        /* Obtain and print thread id */
-       	_tid = omp_get_thread_num();
-        std::clog << "Initialisation of OpenMP thread = " << _tid << " on cpu " << sched_getcpu() << "\n";
-        /* Only master thread does this */
-        _nthreads = omp_get_num_threads();
-        if (_tid == 0) {
-            std::clog << "Number of OpenMP threads = " << _nthreads << "\n";
-        }  /* All threads join master thread and terminate */
-    }
+    init_OpenMP();
     
     // Distribution and format
     if (is_host()) {
@@ -382,7 +331,7 @@ void Mumps::analyse() {
     }
 }
 
-bool Mumps::get_b_before_facto() {
+bool Mumps::read_b_before_facto() {
     return _id.ICNTL(parm::FACTO_ELIM) == parm::FELIM_YES;
 }
 
@@ -405,49 +354,28 @@ void Mumps::metrics() {
     if (is_host()) {
         alloc_solve_residual();
         _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
-            _r, _id.rhs);
-        _metrics.residual_norm(_rnrm);
-        _metrics.residual_orth(_onrm);
-        _metrics.A_norm(_anrm);
-        _metrics.sol_norm(_xnrm);
-        _metrics.b_norm(_bnrm);
+            _id.rhs, _r);
+        _metrics.compute_metrics(_rnrm, _onrm, _anrm, _xnrm, _bnrm);
         delete[] _r;
     }
-}
-
-void Mumps::call() {
-    analyse();
-    factorize();
-    solve();
-    metrics();
 }
 
 void Mumps::finalize() {
     if (is_host())
         problem_spec_metrics_output();
     mumps(parm::JOB_END);
-    int ierr = MPI_Finalize();
-    std::cout << "MPI finalization in Mumps, error code: " << ierr << "\n";
+    finalize_MPI();
 }
 
 ////////////////////////////////////////////////////
 // (DE)ALLOCATION
 ////////////////////////////////////////////////////
 void Mumps::alloc_solve_residual() {
-    // Allocate a residual array equal to the rhs in Mumps structure on host
-    if (is_host()) {
-        _r = new double[_id.n];
-        for(int i = 0; i < _id.n; i++) _r[i] = _id.rhs[i];
-    }
+    alloc_array(_id.n, &_r, true, _id.rhs);
 }
 
 void Mumps::alloc_rhs() {
-    // Initialize rhs in Mumps structure to all 1 on host
-    if (is_host()) {
-        std::clog << "Allocating RHS to vector with all 1 of size " << _id.n << "\n";
-        _id.rhs = new double[_id.n];
-        for(int i = 0; i < _id.n; i++) _id.rhs[i] = 1.0;
-    }
+    alloc_array(_id.n, &_id.rhs);
 }
 
 void Mumps::deallocate_A() {
@@ -487,10 +415,11 @@ void Mumps::problem_spec_metrics_output() {
 }
 
 void Mumps::output_metrics_init(std::string file) {
+    base_output_metrics_init(file);
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "test_id\tfile_A\tsolver\t#procs\toption\tvalue\tta\ttf\tts\t"
+        myfile << "test_id\tfile_A\tsolver\t#procs\t#threads\toption\tvalue\tta\ttf\tts\t"
             "ta_tot\ttf_tot\tts_tot\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
             "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
             "tiny_piv\tnull_piv\titer_ref\te_max_front_size\t#nodes\t"
@@ -499,27 +428,12 @@ void Mumps::output_metrics_init(std::string file) {
     }
 }
 
-void Mumps::output_metrics(std::string file, long long ta, 
-        long long tf, long long ts, std::string key,
-        std::string value) {
-    long long ta_tot=total_time(&ta);
-    long long tf_tot=total_time(&tf);
-    long long ts_tot=total_time(&ts);
+void Mumps::output_metrics(std::string file, long long ta, long long tf, 
+        long long ts, std::string key, std::string value) {
+    base_output_metrics(file, _mpi_comm, ta, tf, ts);
     if (is_host()) {
-        std::cout << "\n#procs     =  " << _nb_procs << "\n" <<
-            "current option        =  " << key << "\n" <<
+        std::cout << "current option        =  " << key << "\n" <<
             "current value         =  " << value << "\n" <<
-            "time for analysis     =  " << cst::TIME_RATIO*ta << "\n" <<
-            "time for facto        =  " << cst::TIME_RATIO*tf << "\n" <<
-            "time for solve        =  " << cst::TIME_RATIO*ts << "\n" <<
-            "tot time for analysis =  " << cst::TIME_RATIO*ta_tot << "\n" <<
-            "tot time for facto    =  " << cst::TIME_RATIO*tf_tot << "\n" <<
-            "tot time for solve    =  " << cst::TIME_RATIO*ts_tot << "\n" <<
-            "||A||                 =  " << _anrm << "\n" <<
-            "||b||                 =  " << _bnrm << "\n" <<
-            "||x||                 =  " << _xnrm << "\n" <<
-            "||r||/||A||           =  " << _rnrm << "\n" <<
-            "||A^tr||/||r||        =  " << _onrm << "\n" <<
             "scaled residual       = " << _id.RINFOG(6) << "\n" <<
             "componentwise SR1     = " << _id.RINFOG(7) << "\n" <<
             "componentwise SR2     = " << _id.RINFOG(8) << "\n" <<
@@ -540,19 +454,13 @@ void Mumps::output_metrics(std::string file, long long ta,
 
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << _test_id << "\t" << _file_A << "\tmumps\t" << _nb_procs << 
-            "\t" << key << "\t" << value << "\t" <<
-            cst::TIME_RATIO*ta << "\t" << cst::TIME_RATIO*tf << "\t" << 
-            cst::TIME_RATIO*ts << "\t" << cst::TIME_RATIO*ta_tot << "\t" << 
-            cst::TIME_RATIO*tf_tot << "\t" << cst::TIME_RATIO*ts_tot << 
-            "\t" << _xnrm << "\t" << _rnrm << "\t" << _onrm << 
-            "\t" << _id.RINFOG(6) << "\t" << _id.RINFOG(7) << "\t" << 
-            _id.RINFOG(8) << "\t" << _id.RINFOG(9) << "\t" << _id.RINFOG(1) << 
-            "\t" << _id.RINFOG(2) << "\t" << _id.RINFOG(3) << "\t" << 
-            _id.INFOG(12) << "\t" << _id.INFOG(13) << "\t" << _id.INFOG(25) << 
-            "\t" << _id.INFOG(28) << "\t" << _id.INFOG(15) << "\t" << 
-            _id.INFOG(5) << "\t" << _id.INFOG(6) << "\t" << _id.INFOG(11) <<
-            "\t" << _id.INFOG(29) << "\n";
+        myfile << key << "\t" << value << "\t" << _id.RINFOG(6) << "\t" << 
+            _id.RINFOG(7) << "\t" << _id.RINFOG(8) << "\t" << _id.RINFOG(9) << 
+            "\t" << _id.RINFOG(1) << "\t" << _id.RINFOG(2) << "\t" << 
+            _id.RINFOG(3) << "\t" << _id.INFOG(12) << "\t" << _id.INFOG(13) << 
+            "\t" << _id.INFOG(25) << "\t" << _id.INFOG(28) << "\t" << 
+            _id.INFOG(15) << "\t" << _id.INFOG(5) << "\t" << _id.INFOG(6) << 
+            "\t" << _id.INFOG(11) << "\t" << _id.INFOG(29) << "\n";
         myfile.close();
     }
 }
@@ -562,4 +470,59 @@ void Mumps::set_no_output() {
     _id.ICNTL(parm::OUT_DIAGNOSTIC) = -1;
     _id.ICNTL(parm::OUT_GINFO) = -1;
     _id.ICNTL(parm::OUT_LEVEL) = 0;
+}
+
+////////////////////////////////////////////////////
+// GETTERS
+////////////////////////////////////////////////////
+int Mumps::get_m() {
+    return _id.n;
+}
+
+int Mumps::get_n() {
+    return _id.n;
+}
+
+int Mumps::get_nz() {
+    return _id.nz;
+}
+
+int Mumps::get_nz_loc() {
+    return _id.nz_loc;
+}
+
+double* Mumps::get_a() {
+    return _id.a;
+}
+
+double* Mumps::get_a_loc() {
+    return _id.a_loc;
+}
+
+int* Mumps::get_irn() {
+    return _id.irn;
+}
+
+int* Mumps::get_irn_loc() {
+    return _id.irn_loc;
+}
+
+int* Mumps::get_jcn() {
+    return _id.jcn;
+}
+
+int* Mumps::get_jcn_loc() {
+    return _id.jcn_loc;
+}
+
+double* Mumps::get_rhs() {
+    return _id.rhs;
+}
+
+double* Mumps::get_x() {
+    return _id.rhs;
+}
+
+double* Mumps::get_r() {
+    return _r;
 }

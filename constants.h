@@ -10,6 +10,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include <string>
+
 namespace cst
 {
     const std::string ALPHANUM =
@@ -39,6 +41,8 @@ namespace cst
     const std::string MUMPS_C = "m";
     const std::string QR_MUMPS = "qr_mumps";
     const std::string QR_MUMPS_C = "qrm";
+    const std::string ABCD = "abcd";
+    const std::string ABCD_C = "a";
     const int NIL_MEM_RELAX = 0;
     const int NIL_MEM_FACTOR = 1;
     // Phases
