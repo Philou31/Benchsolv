@@ -21,6 +21,12 @@ Solver::Solver(std::string test_id, std::string file_A, bool n_present_A,
     _nz(nz)
     {}
 
+void Solver::base_construct(bool init_before) {
+    init();
+    read_A();
+    read_b();
+}
+
 void Solver::base_destruct() {
     if (is_host()) {
         deallocate_A();
@@ -110,21 +116,15 @@ long long Solver::total_time(long long *t, MPI_Comm comm) {
 ////////////////////////////////////////////////////
 // MATRIX INPUT
 ////////////////////////////////////////////////////
-void Solver::base_construct() {
-    init();
-    read_A();
-    read_b();
-}
-
 void Solver::init_MPI(MPI_Comm &comm) {
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int namelen = 0;
     int ierr = MPI_Init (NULL, NULL);
     std::clog << "MPI initialization in Mumps, error code: " << ierr << "\n";
     ierr = MPI_Comm_size(comm, &_nb_procs);
-    std::clog << "Running on CPU " << sched_getcpu() << " on node " << processor_name << "\n";
     ierr = MPI_Comm_rank(comm, &_proc_id);
     ierr = MPI_Get_processor_name(processor_name, &namelen);
+    std::clog << "Running on CPU " << sched_getcpu() << " on node " << processor_name << "\n";
     std::clog << "Proc id " << _proc_id << " on a total of " << _nb_procs << " procs\n\n";
 }
 

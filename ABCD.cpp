@@ -10,14 +10,16 @@
 //
 //ABCD::ABCD(std::string test_id, std::string file_A, bool n_present_A, 
 //        std::string file_b, bool n_present_b, int int_opt_key, 
-//        int int_opt_value, int nrows, int ncols, int nz, bool sym):
-//    Solver(test_id, file_A, n_present_A, file_b, n_present_b, nrows, ncols, nz)
+//        int int_opt_value, int nrows, int ncols, int nz, bool sym, 
+//        MPI_Comm mpi_comm):
+//    Solver(test_id, file_A, n_present_A, file_b, n_present_b, nrows, ncols, nz),
+//        _mpi_comm(mpi_comm)
 //{
 //    std::cout << "ABCD initialization\n";
 //    _id.sym = sym;
 //    _id.start_index = 0;
 //    _id.nrhs = 1;
-//    base_construct();
+//    base_construct(false);
 //}
 //
 //ABCD::~ABCD() {
@@ -63,23 +65,19 @@
 //}
 //
 //void ABCD::init() {
+//    // Initialize MPI
 //    init_MPI(_mpi_comm);
 //    
 //    // Initialize ABCD
 //    _id(parab::JOB_INIT);
 //    
 //    // Display initialized OpenMP
-//    #pragma omp parallel
-//    {
-//        /* Obtain and print thread id */
-//       	_tid = omp_get_thread_num();
-//        std::clog << "Initialisation of OpenMP thread = " << _tid << " on cpu " << sched_getcpu() << "\n";
-//        /* Only master thread does this */
-//        _nthreads = omp_get_num_threads();
-//        if (_tid == 0) {
-//            std::clog << "Number of OpenMP threads = " << _nthreads << "\n";
-//        }  /* All threads join master thread and terminate */
-//    }
+//    init_OpenMP();
+//    
+//    // Default options
+//    set_opt(parab::VERBOSE, parab::VERBOSE_DEFAULT);
+//    set_opt(parab::SCALING, parab::SCALE_NO);
+//    set_opt(parab::AUG, parab::AUG_Aij);
 //    
 //    //Test Option
 //    if (_opt_key != cst::EMPTY_INT_OPT_KEY) {
@@ -94,7 +92,9 @@
 //}
 //
 //void ABCD::analyse() {
+//    std::clog<<"MWAHAHAHAHA1!\n";
 //    _id(parab::JOB_ANALYSIS);
+//    std::clog<<"MWAHAHAHAHA2!\n";
 //}
 //
 //void ABCD::factorize() {

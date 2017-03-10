@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////
 //    //Matrix A
 //    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
-//            cst::A_WATER_MPHASE_SMALL_FILE);
+//            cst::A_MHD_10_FILE);
 //    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    a.add<int>("nb_rows", '1', "Number of rows in the matrix A", false, 0);
@@ -49,12 +49,12 @@ int main(int argc, char **argv) {
 //    a.add<int>("nz", '3', "Number of non-zero values in the matrix A",false, 0);
 //    //Matrix B
 //    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-//            false, cst::RHS_WATER_MPHASE_SMALL_FILE);
+//            false, cst::RHS_MHD_10_FILE);
 //    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
 //    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-//            false, parm::A_DISTR_ANALYSIS, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+//            false, parm::A_DISTR_FACTO_MAPPING, cmdline::oneof<int>(parm::A_CENTRALIZED, 
 //            parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
 //    a.add<std::string>("A_loc", '0', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
 //            false, cst::A_WATER_MPHASE_SMALL_FILE_LOC2);
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 //            false, parm::A_ASSEMBLED_FORMAT, cmdline::oneof<int>(parm::A_ASSEMBLED_FORMAT,
 //            parm::A_ELEMENTAL_FORMAT));
 //    a.add<int>("A_symmetry", 'y', "Symmetry of the matrix A",
-//            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
+//            false, parm::SYM_GENERAL, cmdline::oneof<int>(parm::SYM_UNSYM,
 //            parm::SYM_GENERAL, parm::SYM_DEFPOS));
 //    a.add<int>("working_host", 'w', "The host is working or not",
 //            false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 //            cst::QR_MUMPS_C, cst::ABCD, cst::ABCD_C));
 //    ////Test type
 //    a.add<std::string>(cst::MULTIPLE_BENCH, cst::MULTIPLE_BENCH_C, "Run multiple benchmarks or just options from analysis file",
-//            false, cst::OPTION, 
+//            false, cst::MULTIPLE, 
 //            cmdline::oneof<std::string>(cst::MULTIPLE, cst::SINGLE, cst::OPTION));
 //    ////Option test
 //    a.add<std::string>("string_opt_key", '(', "String key of the option to change (qr_mumps)",
@@ -310,13 +310,17 @@ int main(int argc, char **argv) {
         b.run();
     }
 //    else if (solver == "abcd") {
+//        std::clog<<"MWAHA1!\n";
 //        // Initialisation of QR_Mumps and Benchmark
 //        ABCD s(test_id, A_file, An, b_file, bn, int_opt_key, int_opt_key, 
-//            nrows, ncols, nz, true);
+//            nrows, ncols, nz, true, MPI_COMM_WORLD);
+//        std::clog<<"MWAHA3!\n";
 //        Benchmark<ABCD, int, int> b(&s, multiple_bench, bench_file, 
 //            out_file, anal_file, facto_file, sol_file, sol_spec_file, 
 //            output_metrics);
+//        std::clog<<"MWAHA4!\n";
 //        // Run benchmark
 //        b.run();
+//        std::clog<<"MWAHA5!\n";
 //    }
 }

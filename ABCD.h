@@ -33,7 +33,8 @@
 //    //!
 //    ABCD(std::string test_id, std::string file_A, bool n_present_A, 
 //        std::string file_b, bool n_present_b, int int_opt_key, 
-//            int int_opt_value, int nrows, int ncols, int nz, bool sym);
+//            int int_opt_value, int nrows, int ncols, int nz, bool sym, 
+//            MPI_Comm mpi_comm);
 //    
 //    //!
 //    //! \brief Destructor of the ABCD class

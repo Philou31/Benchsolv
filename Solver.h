@@ -55,7 +55,19 @@ public:
     //!
     Solver(std::string test_id, std::string file_A, bool n_present_A, 
         std::string file_b, bool n_present_b, int nrows, int ncols, int nz);
+    
+    //!
+    //! \fn void base_construct()
+    //! \brief Initialize solver and get matrices
+    //!
+    //! \param init_before: true if solver init to be done before matrices read
+    //!
+    virtual void base_construct(bool init_before=true);
 
+    //!
+    //! \fn void base_destruct()
+    //! \brief Destruct solver and free matrices
+    //!
     virtual void base_destruct();
     
     ////////////////////////////////////////////////////
@@ -358,13 +370,7 @@ public:
     
     ////////////////////////////////////////////////////
     // RUNNING THE SOLVER
-    ////////////////////////////////////////////////////
-    //!
-    //! \fn void base_construct()
-    //! \brief Initialize solver and get matrices
-    //!
-    virtual void base_construct();
-    
+    ////////////////////////////////////////////////////    
     //!
     //! \fn void init()
     //! \brief Initialize the Solver

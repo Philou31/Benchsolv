@@ -253,9 +253,11 @@ void Benchmark<S,K,V>::output_metrics() {
 template <class S, typename K, typename V>
 void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
     if (a) {
+//        std::clog<<"MWAHAHAHA1!\n";
         phase(&Solver::analyse, cst::ANALYSIS_PHASE, _ta);
 //         Is the mapping of A dependent on options ?????
 //        _got_A=false;
+//        std::clog<<"MWAHAHAHA2!\n";
     }
     if (f) {
         // In the case of distributed input, local parts must be read before
@@ -287,10 +289,12 @@ void Benchmark<S,K,V>::run() {
     //      !compare is actually string equality
     if (!_multiple_bench.compare(cst::OPTION) || (_b_file == _o_file && 
         _o_file == _a_file && _a_file == _f_file && _f_file == _s_file && 
-        _s_file == cst::EMPTY_FILE))
+        _s_file == cst::EMPTY_FILE)) {
+//        std::clog<<"MWAHAHA1!\n";
         call();
+//        std::clog<<"MWAHAHA2!\n";
     // Single options file launching tests with all phases
-    else if (!_multiple_bench.compare(cst::SINGLE)) single_benchmark();
+    } else if (!_multiple_bench.compare(cst::SINGLE)) single_benchmark();
     // Multiple options file and multiple tests depending on file
     else multiple_benchmark();
 }

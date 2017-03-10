@@ -34,6 +34,7 @@ Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A,
         _mem_factor = mem_factor;
     // Call init and get matrices
     base_construct();
+    std::clog << "Error Analysis:\n";
     set_opt(parm::ERR_ANALYSIS, erranal);
 }
 
@@ -289,6 +290,7 @@ void Mumps::init() {
     // Force sequential behaviour if only one process
     if (_nb_procs == 1)
         _distr = parm::A_CENTRALIZED;
+        _id.par = parm::WORKING_HOST;
     if (_nb_procs * _nthreads == 1) {
         set_opt(parm::SEQPAR_ANALYSIS, parm::ANAL_SEQ);
         set_opt(parm::SYMPERM_SEQ, parm::SYMPERM_SEQAUTO);
@@ -416,8 +418,7 @@ void Mumps::output_metrics_init(std::string file) {
     if (is_host()) {
         std::ofstream myfile;
         myfile.open(file.c_str(), std::ofstream::app);
-        myfile << "test_id\tfile_A\tsolver\t#procs\t#threads\toption\tvalue\tta\ttf\tts\t"
-            "ta_tot\ttf_tot\tts_tot\txnrm\trnrm\tonrm\tSR\tSR1\tSR2\tup_rnrm\t"
+        myfile << "SR\tSR1\tSR2\tup_rnrm\t"
             "e_elim_flops\te_ass_flops\telim_flops\toff_diag_piv\tdelayed_piv\t"
             "tiny_piv\tnull_piv\titer_ref\te_max_front_size\t#nodes\t"
             "order_largest_front\t#factors_entries\n";
