@@ -34,7 +34,8 @@ Mumps::Mumps(std::string test_id, std::string file_A, bool n_present_A,
         _mem_factor = mem_factor;
     // Call init and get matrices
     base_construct();
-    std::clog << "Error Analysis:\n";
+    if (is_host())
+        std::clog << "Error Analysis\n";
     set_opt(parm::ERR_ANALYSIS, erranal);
 }
 
@@ -311,11 +312,12 @@ void Mumps::init() {
     }
     
     // Distribution and format
-    if (is_host()) {
+    if (is_host()) 
+//    {
         std::cout << "Setting distribution and format:\n";
         set_opt(parm::A_FORMAT, _format);
         set_opt(parm::A_DISTRIBUTION, _distr);
-    }
+//    }
     //Test ID
     if (is_host())
         std::clog << "TEST ID: " << _test_id << "\n";
@@ -328,6 +330,11 @@ void Mumps::analyse() {
         set_opt(parm::MEMORY_SIZE,
             std::floor(parm::MEMORY_SIZE_FACTOR*_id.INFOG(parm::MEMORY_LOWER_BOUND)));
     }
+}
+
+bool Mumps::read_A_before_facto() {
+    return _id.ICNTL(parm::A_DISTRIBUTION) == parm::A_DISTR_FACTO_MAPPING
+            || _id.ICNTL(parm::A_DISTRIBUTION) == parm::A_DISTR_FACTO;
 }
 
 bool Mumps::read_b_before_facto() {

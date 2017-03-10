@@ -393,6 +393,19 @@ public:
     virtual void analyse() = 0;
     
     //!
+    //! \fn bool read_A_before_facto()
+    //! \brief Returns true if A should be read again before factorization
+    //!
+    //! This function will check if an option in the solver makes reading the
+    //! matrix A again mandatory before a factorisation.
+    //! For example, in Mumps, if the matrix is ditributed using a computed
+    //! mapping or if the distributed parts are distributed before facto.
+    //!
+    //! \return true if the matrix A should be read again before facto
+    //!
+    virtual bool read_A_before_facto();
+    
+    //!
     //! \fn bool read_b_before_facto()
     //! \brief Returns true if b should be read again before factorization
     //!

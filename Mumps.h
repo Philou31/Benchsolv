@@ -174,6 +174,7 @@ public:
     
     virtual void init() override;
     virtual void analyse() override;
+    virtual bool read_A_before_facto() override;
     virtual bool read_b_before_facto() override;
     virtual void factorize() override;
     virtual void solve() override;

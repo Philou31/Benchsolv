@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     ////////////////////////////////////////////////////
 //    //Matrix A
 //    a.add<std::string>("Amatrix", 'A', "File containing the A matrix", false,
-//            cst::A_MHD_10_FILE);
+//            cst::A_WATER_MPHASE_SMALL_FILE);
 //    a.add<std::string>("A_n_present", 'a', "Dimensions are present or not in A", 
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    a.add<int>("nb_rows", '1', "Number of rows in the matrix A", false, 0);
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 //    a.add<int>("nz", '3', "Number of non-zero values in the matrix A",false, 0);
 //    //Matrix B
 //    a.add<std::string>("RHS", 'B', "File containing the Right Hand Side matrix",
-//            false, cst::RHS_MHD_10_FILE);
+//            false, cst::RHS_WATER_MPHASE_SMALL_FILE);
 //    a.add<std::string>("b_n_present", 'b', "Dimensions are present or not in b",
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 //            false, parm::A_ASSEMBLED_FORMAT, cmdline::oneof<int>(parm::A_ASSEMBLED_FORMAT,
 //            parm::A_ELEMENTAL_FORMAT));
 //    a.add<int>("A_symmetry", 'y', "Symmetry of the matrix A",
-//            false, parm::SYM_GENERAL, cmdline::oneof<int>(parm::SYM_UNSYM,
+//            false, parm::SYM_UNSYM, cmdline::oneof<int>(parm::SYM_UNSYM,
 //            parm::SYM_GENERAL, parm::SYM_DEFPOS));
 //    a.add<int>("working_host", 'w', "The host is working or not",
 //            false, parm::WORKING_HOST, cmdline::oneof<int>(parm::WORKING_HOST, 
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 //            cst::QR_MUMPS_C, cst::ABCD, cst::ABCD_C));
 //    ////Test type
 //    a.add<std::string>(cst::MULTIPLE_BENCH, cst::MULTIPLE_BENCH_C, "Run multiple benchmarks or just options from analysis file",
-//            false, cst::MULTIPLE, 
+//            false, cst::OPTION, 
 //            cmdline::oneof<std::string>(cst::MULTIPLE, cst::SINGLE, cst::OPTION));
 //    ////Option test
 //    a.add<std::string>("string_opt_key", '(', "String key of the option to change (qr_mumps)",
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 //            false, "options/run.params");
 //    ////Multiple tests (output, analysis, factorization, solve)
 //    a.add<std::string>("output", 't', "File containing the options to test for output",
-//            false, "options/mumps/output.opt");
+//            false, cst::EMPTY_FILE);
 //    a.add<std::string>("analysis", 'z', "File containing the options to test in analysis",
 //            false, "options/mumps/analysis.opt");
 //    a.add<std::string>("facto", 'i', "File containing the options to test in factorisation",

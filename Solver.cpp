@@ -22,9 +22,12 @@ Solver::Solver(std::string test_id, std::string file_A, bool n_present_A,
     {}
 
 void Solver::base_construct(bool init_before) {
-    init();
+    if (init_before)
+        init();
     read_A();
     read_b();
+    if (!init_before)
+        init();
 }
 
 void Solver::base_destruct() {
@@ -320,9 +323,14 @@ void Solver::display_x() {
 ////////////////////////////////////////////////////
 // RUNNING THE SOLVER
 ////////////////////////////////////////////////////
+bool Solver::read_A_before_facto() {
+    return false;
+}
+
 bool Solver::read_b_before_facto() {
     return false;
 }
+
 void Solver::call() {
     analyse();
     factorize();
