@@ -122,13 +122,32 @@ long long Solver::total_time(long long *t, MPI_Comm comm) {
 void Solver::init_MPI(MPI_Comm &comm) {
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int namelen = 0;
+    int val=0;
+    MPI_Status status;
     int ierr = MPI_Init (NULL, NULL);
+
     std::clog << "MPI initialization in Mumps, error code: " << ierr << "\n";
     ierr = MPI_Comm_size(comm, &_nb_procs);
     ierr = MPI_Comm_rank(comm, &_proc_id);
     ierr = MPI_Get_processor_name(processor_name, &namelen);
-    std::clog << "Running on CPU " << sched_getcpu() << " on node " << processor_name << "\n";
-    std::clog << "Proc id " << _proc_id << " on a total of " << _nb_procs << " procs\n\n";
+
+    if (_nb_procs!=1) {
+        if (_proc_id != cst::HOST_ID)
+                MPI_Recv(&val, 1, MPI_INTEGER, _proc_id-1, 0, comm, &status);
+        std::cout << "MPI_proc\tSize\tCPU\tProcessor\n";
+        std::cout << _proc_id << "\t" << _nb_procs << "\t" << sched_getcpu() << "\t" << processor_name << "\n";
+    }
+    
+    init_OpenMP();
+    
+    if (_nb_procs != 1) {
+        if (_proc_id==0)
+                MPI_Send(&val, 1, MPI_INTEGER, 1, 0, comm);
+        else {
+                MPI_Send(&val, 1, MPI_INTEGER, (_proc_id+1)%_nb_procs, 0, comm);
+        }
+        MPI_Barrier(MPI::COMM_WORLD);
+    }
 }
 
 void Solver::finalize_MPI() {
@@ -137,16 +156,16 @@ void Solver::finalize_MPI() {
 }
     
 void Solver::init_OpenMP() {
+    std::cout << "MPI_proc\tOMP_thread\tSize\tCPU\n";
     #pragma omp parallel
     {
-        /* Obtain and print thread id */
-       	_tid = omp_get_thread_num();
-        std::clog << "Initialisation of OpenMP thread = " << _tid << " on cpu " << sched_getcpu() << "\n";
-        /* Only master thread does this */
+        _tid = omp_get_thread_num();
         _nthreads = omp_get_num_threads();
-        if (_tid == 0) {
-            std::clog << "Number of OpenMP threads = " << _nthreads << "\n";
-        }  /* All threads join master thread and terminate */
+        #pragma omp critical
+        {
+                std::cout << _proc_id << "\t" << _tid << "\t" << _nthreads << 
+                    "\t" << sched_getcpu() << "\n";
+        }
     }
 }
     
@@ -201,7 +220,6 @@ void Solver::read_MM(std::string file, int &m, int &n, int &nz, double **values,
     if (rhs) size = m;
     //      matrix distributed => read local part => size=local_nz
     else size = read_nz_loc(nz, local);
-        
     
     std::clog << "Matrix of size: " << size << "\n";
     

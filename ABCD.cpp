@@ -92,9 +92,7 @@
 //}
 //
 //void ABCD::analyse() {
-//    std::clog<<"MWAHAHAHAHA1!\n";
 //    _id(parab::JOB_ANALYSIS);
-//    std::clog<<"MWAHAHAHAHA2!\n";
 //}
 //
 //void ABCD::factorize() {

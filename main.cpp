@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 //            false, cst::TRUE, cmdline::oneof<std::string>(cst::TRUE, cst::FALSE));
 //    //Mumps
 //    a.add<int>("A_distribution", '=', "Distribution of the matrix A",
-//            false, parm::A_DISTR_FACTO_MAPPING, cmdline::oneof<int>(parm::A_CENTRALIZED, 
+//            false, parm::A_CENTRALIZED, cmdline::oneof<int>(parm::A_CENTRALIZED, 
 //            parm::A_DISTR_ANALYSIS, parm::A_DISTR_FACTO, parm::A_DISTR_FACTO_MAPPING));
 //    a.add<std::string>("A_loc", '0', "Tad-delimited file with proc_id\tbeg_block\tend_block; 128 process",
 //            false, cst::A_WATER_MPHASE_SMALL_FILE_LOC2);
@@ -279,11 +279,11 @@ int main(int argc, char **argv) {
     std::string output_file = a.get<std::string>("output_file") + suffix;
     std::string error_file = a.get<std::string>("error_file") + suffix;
     //Redirect outputs
-    FILE *f = freopen(fortran_output.c_str(), "a", stdout);
-    std::ofstream coutstr(output_file, std::ofstream::app);
-    std::cout.rdbuf(coutstr.rdbuf());
-    std::ofstream cerrstr(error_file, std::ofstream::app);
-    std::cerr.rdbuf(cerrstr.rdbuf());
+//    FILE *f = freopen(fortran_output.c_str(), "a", stdout);
+//    std::ofstream coutstr(output_file, std::ofstream::app);
+//    std::cout.rdbuf(coutstr.rdbuf());
+//    std::ofstream cerrstr(error_file, std::ofstream::app);
+//    std::cerr.rdbuf(cerrstr.rdbuf());
 
 
     ////////////////////////////////////////////////////
@@ -310,17 +310,13 @@ int main(int argc, char **argv) {
         b.run();
     }
 //    else if (solver == "abcd") {
-//        std::clog<<"MWAHA1!\n";
 //        // Initialisation of QR_Mumps and Benchmark
 //        ABCD s(test_id, A_file, An, b_file, bn, int_opt_key, int_opt_key, 
 //            nrows, ncols, nz, true, MPI_COMM_WORLD);
-//        std::clog<<"MWAHA3!\n";
 //        Benchmark<ABCD, int, int> b(&s, multiple_bench, bench_file, 
 //            out_file, anal_file, facto_file, sol_file, sol_spec_file, 
 //            output_metrics);
-//        std::clog<<"MWAHA4!\n";
 //        // Run benchmark
 //        b.run();
-//        std::clog<<"MWAHA5!\n";
 //    }
 }

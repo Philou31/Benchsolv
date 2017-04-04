@@ -268,9 +268,8 @@ void Benchmark<S,K,V>::call(bool a, bool f, bool s, bool o) {
         }
         phase(&Solver::factorize, cst::FACTORIZATION_PHASE, _tf);
     }
-    long long int t;
     if (s) {
-        phase(&Solver::solve, cst::SOLVE_PHASE, t);
+        phase(&Solver::solve, cst::SOLVE_PHASE, _ts);
         _got_b=false;
     }
     if (o && _output_metrics) output_metrics();
