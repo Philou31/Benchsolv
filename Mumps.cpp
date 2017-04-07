@@ -355,20 +355,20 @@ void Mumps::solve() {
 }
 
 void Mumps::metrics() {
-    // If distributed matrix, assemble on host
-    if (_distr == parm::A_DISTR_ANALYSIS && !_A_assembled) {
-        if (is_host())
-            deallocate_A();
-        assemble_A();
-    }
-    // Compute metrics on host
-    if (is_host()) {
-        alloc_solve_residual();
-        _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
-            _id.rhs, _r);
-        _metrics.compute_metrics(_rnrm, _onrm, _anrm, _xnrm, _bnrm);
-        delete[] _r;
-    }
+//    // If distributed matrix, assemble on host
+//    if (_distr == parm::A_DISTR_ANALYSIS && !_A_assembled) {
+//        if (is_host())
+//            deallocate_A();
+//        assemble_A();
+//    }
+//    // Compute metrics on host
+//    if (is_host()) {
+//        alloc_solve_residual();
+//        _metrics.init_metrics(_id.n, _id.n, _id.nz, _id.a, _id.irn, _id.jcn, 
+//            _id.rhs, _r);
+//        _metrics.compute_metrics(_rnrm, _onrm, _anrm, _xnrm, _bnrm);
+//        delete[] _r;
+//    }
 }
 
 void Mumps::finalize() {
