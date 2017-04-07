@@ -1,19 +1,19 @@
-////! \file QR_Mumps.h
-////! \brief Mumps class for the solver
-////! \author filou
-////! \version 0.1
-////! \date 22/10/2016, 18:42
-////!
-////! Class QR_Mumps inheriting from/implementing methods of class Solver
-////!
-//
-//#ifndef QR_MUMPS_H
-//#define QR_MUMPS_H
-//
-//#include "Solver.h"
-//extern "C" {
-//    #include "dqrm_c.h"
-//}
+//! \file QR_Mumps.h
+//! \brief Mumps class for the solver
+//! \author filou
+//! \version 0.1
+//! \date 22/10/2016, 18:42
+//!
+//! Class QR_Mumps inheriting from/implementing methods of class Solver
+//!
+
+#ifndef QR_MUMPS_H
+#define QR_MUMPS_H
+
+#include "Solver.h"
+extern "C" {
+    #include "dqrm_c.h"
+}
 //#include "Parameters_QR_Mumps.h"
 //
 //class QR_Mumps: public Solver {
@@ -115,7 +115,7 @@
 //    virtual double* get_x() override;
 //    virtual double* get_r() override;
 //};
-//
-//
-//#endif /* QR_MUMPS_H */
-//
+
+
+#endif /* QR_MUMPS_H */
+

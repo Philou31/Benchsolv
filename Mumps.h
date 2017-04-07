@@ -19,13 +19,13 @@
 #include "dmumps_c.h"
 #include "Solver.h"
 #include "Parameters_Mumps.h"
-//#include "Metrics.h"
+#include "Metrics.h"
 
 class Mumps : public Solver {
 private:
     DMUMPS_STRUC_C _id; // MUMPS data structure
     MPI_Comm _mpi_comm; // MPI communicator
-//    Metrics _metrics;   // object computing metrics using QR_Mumps structure
+    Metrics _metrics;   // object computing metrics using QR_Mumps structure
     // Problem specific info
     std::string _pb_spec_file;  // File for the metrics specific to a matrix
     int _distr; // Input matrix distribution
