@@ -17,7 +17,7 @@
 #include "cmdline.h"
 #include "QR_Mumps.h"
 #include "Mumps.h"
-#include "ABCD.h"
+//#include "ABCD.h"
 #include "Benchmark.h"
 
 int main(int argc, char **argv) {
@@ -299,16 +299,17 @@ int main(int argc, char **argv) {
             anal_file, facto_file, sol_file, sol_spec_file, output_metrics);
         // Run benchmark
         b.run();
-    } else if (solver == "qr_mumps" || solver == "qrm") {
-        // Initialisation of QR_Mumps and Benchmark
-        QR_Mumps s(test_id, A_file, An, b_file, bn, string_opt_key, 
-            int_opt_value, nrows, ncols, nz);
-        Benchmark<QR_Mumps, std::string, int> b(&s, multiple_bench, bench_file, 
-            out_file, anal_file, facto_file, sol_file, sol_spec_file, 
-            output_metrics);
-        // Run benchmark
-        b.run();
     }
+//    else if (solver == "qr_mumps" || solver == "qrm") {
+//        // Initialisation of QR_Mumps and Benchmark
+//        QR_Mumps s(test_id, A_file, An, b_file, bn, string_opt_key, 
+//            int_opt_value, nrows, ncols, nz);
+//        Benchmark<QR_Mumps, std::string, int> b(&s, multiple_bench, bench_file, 
+//            out_file, anal_file, facto_file, sol_file, sol_spec_file, 
+//            output_metrics);
+//        // Run benchmark
+//        b.run();
+//    }
 //    else if (solver == "abcd") {
 //        // Initialisation of QR_Mumps and Benchmark
 //        ABCD s(test_id, A_file, An, b_file, bn, int_opt_key, int_opt_key, 
