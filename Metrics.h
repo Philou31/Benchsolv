@@ -1,23 +1,23 @@
-//! \file Metrics.h
-//! \brief Metrics class for the solver
-//! \author filou
-//! \version 0.1
-//! \date 22/10/2016, 18:42
-//!
-//! Class Metrics computing metrics on the problem and the found solution. This
-//! class is meant to be fair in the results gotten from the solvers: metrics 
-//! are computed in the exact same way.
-//!
-
-#ifndef METRICS_H
-#define METRICS_H
-
-#include "QR_Mumps.h"
-
-class Metrics {
-private:
-    dqrm_spmat_type_c _qrm_mat; // QR_Mumps data structure
-    double *_r, *_x;    // residual (Ax-b) and solution arrays
+////! \file Metrics.h
+////! \brief Metrics class for the solver
+////! \author filou
+////! \version 0.1
+////! \date 22/10/2016, 18:42
+////!
+////! Class Metrics computing metrics on the problem and the found solution. This
+////! class is meant to be fair in the results gotten from the solvers: metrics 
+////! are computed in the exact same way.
+////!
+//
+//#ifndef METRICS_H
+//#define METRICS_H
+//
+//#include "QR_Mumps.h"
+//
+//class Metrics {
+//private:
+//    dqrm_spmat_type_c _qrm_mat; // QR_Mumps data structure
+//    double *_r, *_x;    // residual (Ax-b) and solution arrays
 //public:
 //    //!
 //    //! \brief Constructor of the Metrics class
@@ -100,7 +100,7 @@ private:
 //    //!
 //    void compute_metrics(double &rnrm, double &onrm, double &anrm, double &xnrm, 
 //        double &bnrm);
-};
-
-#endif /* METRICS_H */
-
+//};
+//
+//#endif /* METRICS_H */
+//
