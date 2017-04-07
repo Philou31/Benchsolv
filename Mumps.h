@@ -19,7 +19,7 @@
 #include "dmumps_c.h"
 #include "Solver.h"
 #include "Parameters_Mumps.h"
-//#include "Metrics.h"
+#include "Metrics.h"
 
 class Mumps : public Solver {
 private:
