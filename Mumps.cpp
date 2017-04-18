@@ -297,7 +297,7 @@ void Mumps::init() {
     set_opt(parm::NULL_PIVOT, parm::NULL_PIVOT_YES);
     set_opt(parm::SCALING, parm::SCALE_AUTO);
     if (is_host() && _mem_relax != 0)
-        set_opt(parm::MEMORY_PERCENT_INC, parm::MEMORY_DEFAULT_PERCENT_INC);
+        set_opt(parm::MEMORY_PERCENT_INC, _mem_relax);
     
     //Test Option
     if (_opt_key != cst::EMPTY_INT_OPT_KEY) {
@@ -333,7 +333,7 @@ void Mumps::analyse() {
     if (is_host() && _mem_factor != 1) {
         std::clog << "LOWER BOUND OF MEMORY SIZE: " << _id.INFOG(parm::MEMORY_LOWER_BOUND) << "\n";
         set_opt(parm::MEMORY_SIZE,
-            std::floor(parm::MEMORY_SIZE_FACTOR*_id.INFOG(parm::MEMORY_LOWER_BOUND)));
+            std::floor(_mem_factor*_id.INFOG(parm::MEMORY_LOWER_BOUND)));
     }
 }
 

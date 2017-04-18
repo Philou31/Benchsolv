@@ -157,13 +157,15 @@ void Solver::finalize_MPI() {
     
 void Solver::init_OpenMP() {
     std::cout << "MPI_proc\tOMP_thread\tSize\tCPU\n";
-    #pragma omp parallel
+    int tid;
+    #pragma omp parallel private(tid)
     {
+        tid = omp_get_thread_num();
         _tid = omp_get_thread_num();
         _nthreads = omp_get_num_threads();
         #pragma omp critical
         {
-                std::cout << _proc_id << "\t" << _tid << "\t" << _nthreads << 
+                std::cout << _proc_id << "\t" << tid << "\t" << _nthreads << 
                     "\t" << sched_getcpu() << "\n";
         }
     }
