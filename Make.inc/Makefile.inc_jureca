@@ -1,0 +1,71 @@
+PROJECT=/homea/eocoe/eocoe26/Benchsolv/
+#####################################
+## LIBRARIES
+#####################################
+LIB_HOME=/scratch/algo/leleux/lib_intel
+MKLROOT=/usr/local/software/jureca/Stages/2016b/software/imkl/2017.0.098-iimpi-2016b/mkl
+#############
+# QR_MUMPS
+#############
+QRM_HOME=/homea/eocoe/eocoe26/lib/qr_mumps-2.0/build
+IQRMUMPS2= -I$(QRM_HOME)/include -Dhave_colamd -Dhave_metis -Dhave_scotch -Dhave_starpu -Ddprec
+LQRMUMPS2= -L${QRM_HOME}/lib -ldqrm -lsqrm -lcqrm -lzqrm -lqrm_common
+# -lgomp
+#############
+#STARPU
+#############
+STARPU_HOME=/homea/eocoe/eocoe26/lib/starpu-1.2.1/build
+HWLOC_HOME=/homea/eocoe/eocoe26/lib/hwloc-1.11.7rc1/build/
+ISTARPU2= -I$(STARPU_HOME)/include/starpu/1.2
+LSTARPU2= -L$(STARPU_HOME)/lib -lstarpu-1.2 -L$(HWLOC_HOME)/lib/ -lhwloc
+#############
+# MUMPS
+#############
+#MUMPS_HOME=$(LIB_HOME)/MUMPS_5.0.2
+MUMPS_HOME=/homea/eocoe/eocoe26/lib/MUMPS_5.1.1
+IMUMPS2= -I$(MUMPS_HOME)/include
+LMUMPS2= -L$(MUMPS_HOME)/lib -lcmumps -lsmumps -ldmumps -lzmumps -lmumps_common -lpord
+#############
+# METIS
+#############
+METIS_HOME=/usr/local/software/jureca/Stages/2016b/software/METIS/5.1.0-iccifort-2017.0.098-GCC-5.4.0/
+IMETIS2= -I$(METIS_HOME)/include
+LMETIS2= -L$(METIS_HOME)/lib -lmetis
+PARMETIS_HOME=/usr/local/software/jureca/Stages/2016b/software/ParMETIS/4.0.3-iimpi-2016b/
+IPARMETIS2= -I$(PARMETIS_HOME)/include
+LPARMETIS2= -L$(PARMETIS_HOME)/lib -lparmetis
+#############
+# SCOTCH
+#############
+#SCOTCH_HOME=/usr/local/software/jureca/Stages/2016b/software/SCOTCH/6.0.4-iimpi-2016b/
+#ISCOTCH2= -I$(SCOTCH_HOME)/include
+#LSCOTCH2= -L$(SCOTCH_HOME)/lib -lesmumps -lscotch -lscotcherr -lscotcherrexit
+#LPTSCOTCH2= -lptesmumps -lptscotch -lptscotcherr -lptscotcherrexit
+#############
+# SCALAPACK
+#############
+LSCALAPACK2= -L$(MKLROOT) -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64
+#############
+# BLAS
+#############
+LBLAS2 = -L$(MKLROOT) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core
+#############
+# INTEL OPENMP
+#############
+LIOMP2=-L/usr/local/software/jureca/Stages/2016b/software/icc/2017.0.098-GCC-5.4.0/lib/intel64 -liomp5
+#############
+# SUITESPARSE
+#############
+SUITESPARSE_HOME=/homea/eocoe/eocoe26/lib/SuiteSparse/
+ISUITESPARSE2= -I$(SUITESPARSE_HOME)/include
+LSUITESPARSE2= -L$(SUITESPARSE_HOME)/lib -lsuitesparseconfig
+LCOLAMD2= -lcolamd
+
+#####################################
+## COMPILER
+#####################################
+CC=mpiicpc
+CFLAGS=-c -O2 -Wall -std=c++11 $(ISTARPU2) $(IMETIS2) $(ISCOTCH2) $(IMUMPS2) $(IPARMETIS2) $(ICOLAMD2) $(ISUITESPARSE2) $(IQRMUMPS2) -MMD -MP -qopenmp
+LDFLAGS=$(LQRMUMPS2) $(LSTARPU2) $(LMUMPS2) $(LSCOTCH2) $(LPTSCOTCH2) $(LPARMETIS2) $(LMETIS2) $(LSUITESPARSE2) $(LCOLAMD2) $(LSCALAPACK2) $(LLAPACK2) $(LBLAS2) $(LIOMP2) -std=c++11 -qopenmp -lifcore
+#CFLAGS=-c -O2 -Wall -std=c++11 $(IMETIS2) $(ISCOTCH2) $(IMUMPS2) $(IPARMETIS2) -MMD -MP -qopenmp
+#LDFLAGS=$(LMUMPS2) $(LSCOTCH2) $(LPTSCOTCH2) $(LPARMETIS2) $(LMETIS2) $(LSCALAPACK2) $(LLAPACK2) $(LBLAS2) $(LIOMP2) -std=c++11 -qopenmp -lifcore

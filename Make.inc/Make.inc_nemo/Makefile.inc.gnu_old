@@ -1,0 +1,22 @@
+#####################################
+## LIBRARIES
+#####################################
+#############
+# MPI
+#############
+OMPIDIR=/scratch/algo/leleux/spack/opt/spack/linux-x86_64/gcc-5.4.0/openmpi-2.0.1-kk74d552fokkdotuspswvmnz53f5debz
+LOMPI_FLAGS= -lmpi -lmpi_mpifh
+#############
+# QR_MUMPS
+#############
+QRM_HOME=/scratch/algo/leleux/lib/qr_mumps-2.0/build
+IQRMUMPS = -I$(QRM_HOME)/include -Dhave_colamd -Dhave_metis -Dhave_scotch -Dhave_starpu -Ddprec
+LQRMUMPS = -L${QRM_HOME}/lib -ldqrm -lsqrm -lcqrm -lzqrm -lgomp -lqrm_common
+
+#####################################
+## COMPILER
+#####################################
+CC=g++ -pthread -Wl,-rpath -Wl,$(OMPIDIR) -Wl,--enable-new-dtags
+CFLAGS=-c -O2 -Wall -std=c++11 $(ISTARPU) $(IMETIS) $(ISCOTCH) $(IMUMPS) $(IOMPI) $(IPARMETIS) $(ICOLAMD) $(ISUITESPARSE) $(IQRMUMPS) -MMD -MP
+LDFLAGS=$(LQRMUMPS) $(LSTARPU) $(LMUMPS) $(LSCOTCH) $(LPTSCOTCH) $(LPARMETIS) $(LMETIS) $(LSCALAPACK) $(LLAPACK) $(LBLAS) $(LOMPI) $(LOMPI_FLAGS) -std=c++11 -fopenmp -lgfortran
+# $(LPARDISO) $(LPARDISOMPI)
